@@ -5,7 +5,7 @@ import { Switch } from '@/components/ui/switch';
 import {
   BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell, Tooltip as RechartsTooltip,
 } from 'recharts';
-import { X, ShieldAlert, ShieldCheck, Activity, Shield, Layers, Scale, FileWarning, Gavel } from 'lucide-react';
+import { X, ShieldAlert, ShieldCheck, Activity, Shield, Layers, Scale, FileWarning, Gavel, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CompanyChips } from './ToggleChips';
 import { useDashboard } from '@/lib/DashboardContext';
@@ -15,30 +15,91 @@ import {
   type RiskPoint,
 } from '@/lib/data';
 
+type QuadrantKey = 'critical' | 'elevated' | 'operational' | 'standard';
+
+interface QuadrantInfo {
+  key: QuadrantKey;
+  title: string;
+  color: string;
+  icon: typeof ShieldAlert;
+  axisDescription: string;
+  meaning: string;
+  examples: string;
+  governanceResponse: string;
+  controls: string[];
+}
+
+const QUADRANT_INFO: Record<QuadrantKey, QuadrantInfo> = {
+  critical: {
+    key: 'critical',
+    title: 'Critical Risk',
+    color: RISK_COLORS.Critical,
+    icon: ShieldAlert,
+    axisDescription: 'High Execution Authority + High Stakeholder Exposure',
+    meaning: 'AI systems that make autonomous decisions affecting large numbers of external stakeholders (consumers, merchants, Dashers). These carry the highest governance burden because failures are both likely to occur independently and highly visible.',
+    examples: 'Autonomous dispatch allocation, cross-network pricing, AI-driven safety moderation at scale.',
+    governanceResponse: 'Requires executive sign-off, full red-team audits, immutable audit trails, real-time kill-switches, and continuous fairness monitoring before deployment.',
+    controls: ['Executive sign-off', 'Full red-team + audit', 'Immutable audit trails', 'Real-time monitoring', 'Kill-switch capability', 'Fairness audits'],
+  },
+  elevated: {
+    key: 'elevated',
+    title: 'Elevated Risk',
+    color: RISK_COLORS.Elevated,
+    icon: ShieldAlert,
+    axisDescription: 'Low Execution Authority + High Stakeholder Exposure',
+    meaning: 'AI systems that affect many stakeholders but operate with human oversight or limited autonomy. The risk comes from broad exposure even though a human remains in the loop for key decisions.',
+    examples: 'AI-assisted customer communications, generative content tools with human review, policy recommendation engines.',
+    governanceResponse: 'Requires cross-functional review boards, enhanced monitoring with escalation protocols, and regular disparity audits.',
+    controls: ['Cross-functional review', 'Enhanced oversight', 'Escalation protocols', 'Disparity monitoring'],
+  },
+  operational: {
+    key: 'operational',
+    title: 'Operational Risk',
+    color: RISK_COLORS.Operational,
+    icon: Activity,
+    axisDescription: 'High Execution Authority + Low Stakeholder Exposure',
+    meaning: 'AI systems with significant autonomous decision-making power but limited external-facing impact. Failures are contained to internal operations or narrow use cases rather than affecting the public broadly.',
+    examples: 'Internal dispatch optimization, automated fraud detection for merchants, autonomous delivery robots in limited geographies.',
+    governanceResponse: 'Requires technical safeguards, automated monitoring systems, periodic reviews, and circuit breakers to contain failures.',
+    controls: ['Technical safeguards', 'Automated monitoring', 'Periodic review', 'Circuit breakers'],
+  },
+  standard: {
+    key: 'standard',
+    title: 'Standard Risk',
+    color: RISK_COLORS.Standard,
+    icon: ShieldCheck,
+    axisDescription: 'Low Execution Authority + Low Stakeholder Exposure',
+    meaning: 'AI systems that operate under human supervision with limited external impact. These represent the lowest governance burden, as both the decision scope and stakeholder reach are constrained.',
+    examples: 'AI-generated menu photos, internal analytics dashboards, merchant onboarding suggestions.',
+    governanceResponse: 'Standard development practices with basic monitoring and regular check-ins are sufficient.',
+    controls: ['Standard practices', 'Basic monitoring', 'Regular check-ins'],
+  },
+};
+
 function classifyRiskTier(x: number, y: number): { tier: string; color: string; controls: string[]; icon: 'critical' | 'elevated' | 'operational' | 'standard' } {
   if (x >= 50 && y >= 50) return {
     tier: 'Critical',
     color: RISK_COLORS.Critical,
     icon: 'critical',
-    controls: ['Exec sign-off', 'Full red-team + audit', 'Immutable audit trails', 'Real-time monitoring', 'Kill-switch', 'Fairness audits'],
+    controls: QUADRANT_INFO.critical.controls,
   };
   if (x < 50 && y >= 50) return {
     tier: 'Elevated',
     color: RISK_COLORS.Elevated,
     icon: 'elevated',
-    controls: ['Cross-functional review', 'Enhanced oversight', 'Escalation protocols', 'Disparity monitoring'],
+    controls: QUADRANT_INFO.elevated.controls,
   };
   if (x >= 50 && y < 50) return {
     tier: 'Operational',
     color: RISK_COLORS.Operational,
     icon: 'operational',
-    controls: ['Tech safeguards', 'Auto monitoring', 'Periodic review', 'Circuit breakers'],
+    controls: QUADRANT_INFO.operational.controls,
   };
   return {
     tier: 'Standard',
     color: RISK_COLORS.Standard,
     icon: 'standard',
-    controls: ['Standard practices', 'Basic monitoring', 'Regular check-ins'],
+    controls: QUADRANT_INFO.standard.controls,
   };
 }
 
@@ -68,6 +129,7 @@ export function RiskQuadrant() {
   const [showDoorDash, setShowDoorDash] = useState(true);
   const [showCompetitors, setShowCompetitors] = useState(true);
   const [selectedPoint, setSelectedPoint] = useState<RiskPoint | null>(null);
+  const [selectedQuadrant, setSelectedQuadrant] = useState<QuadrantKey | null>(null);
 
   const visiblePoints = useMemo(() => {
     return riskPoints.filter(p => {
@@ -94,6 +156,16 @@ export function RiskQuadrant() {
     return counts;
   }, [visiblePoints]);
 
+  const quadrantPointsList = useMemo(() => {
+    if (!selectedQuadrant) return [];
+    return visiblePoints.filter(p => {
+      if (selectedQuadrant === 'critical') return p.x >= 50 && p.y >= 50;
+      if (selectedQuadrant === 'elevated') return p.x < 50 && p.y >= 50;
+      if (selectedQuadrant === 'operational') return p.x >= 50 && p.y < 50;
+      return p.x < 50 && p.y < 50;
+    });
+  }, [selectedQuadrant, visiblePoints]);
+
   const riskWeightData = useMemo(() => {
     return riskDomainStandards.map(d => ({
       domain: d.domain.length > 12 ? d.domain.slice(0, 10) + '..' : d.domain,
@@ -110,6 +182,22 @@ export function RiskQuadrant() {
   const pad = { top: 30, right: 30, bottom: 40, left: 50 };
   const plotW = svgW - pad.left - pad.right;
   const plotH = svgH - pad.top - pad.bottom;
+
+  const handleQuadrantClick = (key: QuadrantKey) => {
+    setSelectedQuadrant(selectedQuadrant === key ? null : key);
+    setSelectedPoint(null);
+  };
+
+  const handlePointClick = (point: RiskPoint) => {
+    if (selectedPoint?.id === point.id) {
+      setSelectedPoint(null);
+    } else {
+      setSelectedPoint(point);
+      setSelectedQuadrant(null);
+    }
+  };
+
+  const activeQuadrantInfo = selectedQuadrant ? QUADRANT_INFO[selectedQuadrant] : null;
 
   return (
     <div className="flex flex-col gap-2 h-full">
@@ -134,18 +222,23 @@ export function RiskQuadrant() {
       </div>
 
       <div className="grid grid-cols-4 gap-2 flex-shrink-0">
-        {[
-          { label: 'Critical', count: quadrantCounts.critical, color: RISK_COLORS.Critical, glow: 'glow-border-pink', Icon: ShieldAlert },
-          { label: 'Elevated', count: quadrantCounts.elevated, color: RISK_COLORS.Elevated, glow: 'glow-border-gold', Icon: ShieldAlert },
-          { label: 'Operational', count: quadrantCounts.operational, color: RISK_COLORS.Operational, glow: 'glow-border-cyan', Icon: Activity },
-          { label: 'Standard', count: quadrantCounts.standard, color: RISK_COLORS.Standard, glow: 'glow-border-teal', Icon: ShieldCheck },
-        ].map(q => (
+        {([
+          { key: 'critical' as QuadrantKey, label: 'Critical', count: quadrantCounts.critical, color: RISK_COLORS.Critical, glow: 'glow-border-pink', Icon: ShieldAlert },
+          { key: 'elevated' as QuadrantKey, label: 'Elevated', count: quadrantCounts.elevated, color: RISK_COLORS.Elevated, glow: 'glow-border-gold', Icon: ShieldAlert },
+          { key: 'operational' as QuadrantKey, label: 'Operational', count: quadrantCounts.operational, color: RISK_COLORS.Operational, glow: 'glow-border-cyan', Icon: Activity },
+          { key: 'standard' as QuadrantKey, label: 'Standard', count: quadrantCounts.standard, color: RISK_COLORS.Standard, glow: 'glow-border-teal', Icon: ShieldCheck },
+        ]).map(q => (
           <motion.div
             key={q.label}
-            className={`glass-card rounded-lg p-2 flex items-center gap-2 ${q.glow}`}
+            className={`glass-card rounded-lg p-2 flex items-center gap-2 cursor-pointer transition-all duration-200 ${q.glow}`}
+            style={{
+              outline: selectedQuadrant === q.key ? `1.5px solid ${q.color}` : 'none',
+              boxShadow: selectedQuadrant === q.key ? `0 0 20px ${q.color}30` : undefined,
+            }}
             data-testid={`quadrant-count-${q.label.toLowerCase()}`}
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
+            onClick={() => handleQuadrantClick(q.key)}
           >
             <q.Icon className="w-4 h-4 flex-shrink-0" style={{ color: q.color, filter: `drop-shadow(0 0 4px ${q.color}60)` }} />
             <span className="text-lg font-bold" style={{ color: q.color }}>{q.count}</span>
@@ -157,8 +250,8 @@ export function RiskQuadrant() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 flex-1 min-h-0">
         <div className="lg:col-span-2 glass-card rounded-xl p-3 glow-border-blue flex flex-col">
           <div className="flex items-center justify-between mb-1 flex-shrink-0">
-            <span className="text-[10px] font-semibold text-muted-foreground/50 uppercase tracking-widest">Risk Positioning</span>
-            <span className="text-[10px] text-muted-foreground/30 font-mono">{visiblePoints.length} systems</span>
+            <span className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-widest">Risk Positioning</span>
+            <span className="text-[10px] text-muted-foreground/40 font-mono">{visiblePoints.length} systems</span>
           </div>
           <div className="w-full flex-1 min-h-0 chart-glow">
             <svg viewBox={`0 0 ${svgW} ${svgH}`} className="w-full h-full max-w-[600px] mx-auto" style={{ fontFamily: 'var(--font-sans)' }}>
@@ -179,26 +272,66 @@ export function RiskQuadrant() {
                   <stop offset="0%" stopColor={RISK_COLORS.Operational} stopOpacity="0.02" />
                   <stop offset="100%" stopColor={RISK_COLORS.Operational} stopOpacity="0.12" />
                 </linearGradient>
+                <linearGradient id="q-tl-active" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stopColor={RISK_COLORS.Elevated} stopOpacity="0.35" />
+                  <stop offset="100%" stopColor={RISK_COLORS.Elevated} stopOpacity="0.08" />
+                </linearGradient>
+                <linearGradient id="q-tr-active" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stopColor={RISK_COLORS.Critical} stopOpacity="0.35" />
+                  <stop offset="100%" stopColor={RISK_COLORS.Critical} stopOpacity="0.08" />
+                </linearGradient>
+                <linearGradient id="q-bl-active" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stopColor={RISK_COLORS.Standard} stopOpacity="0.08" />
+                  <stop offset="100%" stopColor={RISK_COLORS.Standard} stopOpacity="0.30" />
+                </linearGradient>
+                <linearGradient id="q-br-active" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stopColor={RISK_COLORS.Operational} stopOpacity="0.08" />
+                  <stop offset="100%" stopColor={RISK_COLORS.Operational} stopOpacity="0.30" />
+                </linearGradient>
                 <filter id="glow"><feGaussianBlur stdDeviation="3" result="blur" /><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
                 <filter id="point-glow"><feGaussianBlur stdDeviation="2" result="blur" /><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
               </defs>
 
-              <rect x={pad.left} y={pad.top} width={plotW / 2} height={plotH / 2} fill="url(#q-tl)" />
-              <rect x={pad.left + plotW / 2} y={pad.top} width={plotW / 2} height={plotH / 2} fill="url(#q-tr)" />
-              <rect x={pad.left} y={pad.top + plotH / 2} width={plotW / 2} height={plotH / 2} fill="url(#q-bl)" />
-              <rect x={pad.left + plotW / 2} y={pad.top + plotH / 2} width={plotW / 2} height={plotH / 2} fill="url(#q-br)" />
+              <rect
+                x={pad.left} y={pad.top} width={plotW / 2} height={plotH / 2}
+                fill={selectedQuadrant === 'elevated' ? 'url(#q-tl-active)' : 'url(#q-tl)'}
+                className="cursor-pointer" onClick={() => handleQuadrantClick('elevated')}
+                stroke={selectedQuadrant === 'elevated' ? RISK_COLORS.Elevated : 'none'} strokeWidth={selectedQuadrant === 'elevated' ? 1.5 : 0} strokeDasharray={selectedQuadrant === 'elevated' ? '4 2' : ''}
+                data-testid="quadrant-area-elevated"
+              />
+              <rect
+                x={pad.left + plotW / 2} y={pad.top} width={plotW / 2} height={plotH / 2}
+                fill={selectedQuadrant === 'critical' ? 'url(#q-tr-active)' : 'url(#q-tr)'}
+                className="cursor-pointer" onClick={() => handleQuadrantClick('critical')}
+                stroke={selectedQuadrant === 'critical' ? RISK_COLORS.Critical : 'none'} strokeWidth={selectedQuadrant === 'critical' ? 1.5 : 0} strokeDasharray={selectedQuadrant === 'critical' ? '4 2' : ''}
+                data-testid="quadrant-area-critical"
+              />
+              <rect
+                x={pad.left} y={pad.top + plotH / 2} width={plotW / 2} height={plotH / 2}
+                fill={selectedQuadrant === 'standard' ? 'url(#q-bl-active)' : 'url(#q-bl)'}
+                className="cursor-pointer" onClick={() => handleQuadrantClick('standard')}
+                stroke={selectedQuadrant === 'standard' ? RISK_COLORS.Standard : 'none'} strokeWidth={selectedQuadrant === 'standard' ? 1.5 : 0} strokeDasharray={selectedQuadrant === 'standard' ? '4 2' : ''}
+                data-testid="quadrant-area-standard"
+              />
+              <rect
+                x={pad.left + plotW / 2} y={pad.top + plotH / 2} width={plotW / 2} height={plotH / 2}
+                fill={selectedQuadrant === 'operational' ? 'url(#q-br-active)' : 'url(#q-br)'}
+                className="cursor-pointer" onClick={() => handleQuadrantClick('operational')}
+                stroke={selectedQuadrant === 'operational' ? RISK_COLORS.Operational : 'none'} strokeWidth={selectedQuadrant === 'operational' ? 1.5 : 0} strokeDasharray={selectedQuadrant === 'operational' ? '4 2' : ''}
+                data-testid="quadrant-area-operational"
+              />
 
-              <line x1={pad.left} y1={pad.top + plotH / 2} x2={pad.left + plotW} y2={pad.top + plotH / 2} stroke="hsl(220 20% 18%)" strokeWidth="1" strokeDasharray="4 4" />
-              <line x1={pad.left + plotW / 2} y1={pad.top} x2={pad.left + plotW / 2} y2={pad.top + plotH} stroke="hsl(220 20% 18%)" strokeWidth="1" strokeDasharray="4 4" />
-              <rect x={pad.left} y={pad.top} width={plotW} height={plotH} fill="none" stroke="hsl(220 20% 16%)" strokeWidth="1" rx="4" />
+              <line x1={pad.left} y1={pad.top + plotH / 2} x2={pad.left + plotW} y2={pad.top + plotH / 2} stroke="hsl(220 20% 18%)" strokeWidth="1" strokeDasharray="4 4" style={{ pointerEvents: 'none' }} />
+              <line x1={pad.left + plotW / 2} y1={pad.top} x2={pad.left + plotW / 2} y2={pad.top + plotH} stroke="hsl(220 20% 18%)" strokeWidth="1" strokeDasharray="4 4" style={{ pointerEvents: 'none' }} />
+              <rect x={pad.left} y={pad.top} width={plotW} height={plotH} fill="none" stroke="hsl(220 20% 16%)" strokeWidth="1" rx="4" style={{ pointerEvents: 'none' }} />
 
-              <text x={pad.left + plotW / 4} y={pad.top + 16} textAnchor="middle" fontSize="10" fontWeight="700" fill={RISK_COLORS.Elevated} filter="url(#glow)">ELEVATED</text>
-              <text x={pad.left + 3 * plotW / 4} y={pad.top + 16} textAnchor="middle" fontSize="10" fontWeight="700" fill={RISK_COLORS.Critical} filter="url(#glow)">CRITICAL</text>
-              <text x={pad.left + plotW / 4} y={pad.top + plotH - 6} textAnchor="middle" fontSize="10" fontWeight="700" fill={RISK_COLORS.Standard} filter="url(#glow)">STANDARD</text>
-              <text x={pad.left + 3 * plotW / 4} y={pad.top + plotH - 6} textAnchor="middle" fontSize="10" fontWeight="700" fill={RISK_COLORS.Operational} filter="url(#glow)">OPERATIONAL</text>
+              <text x={pad.left + plotW / 4} y={pad.top + 16} textAnchor="middle" fontSize="10" fontWeight="700" fill={RISK_COLORS.Elevated} filter="url(#glow)" style={{ pointerEvents: 'none' }}>ELEVATED</text>
+              <text x={pad.left + 3 * plotW / 4} y={pad.top + 16} textAnchor="middle" fontSize="10" fontWeight="700" fill={RISK_COLORS.Critical} filter="url(#glow)" style={{ pointerEvents: 'none' }}>CRITICAL</text>
+              <text x={pad.left + plotW / 4} y={pad.top + plotH - 6} textAnchor="middle" fontSize="10" fontWeight="700" fill={RISK_COLORS.Standard} filter="url(#glow)" style={{ pointerEvents: 'none' }}>STANDARD</text>
+              <text x={pad.left + 3 * plotW / 4} y={pad.top + plotH - 6} textAnchor="middle" fontSize="10" fontWeight="700" fill={RISK_COLORS.Operational} filter="url(#glow)" style={{ pointerEvents: 'none' }}>OPERATIONAL</text>
 
-              <text x={pad.left + plotW / 2} y={svgH - 4} textAnchor="middle" fontSize="10" fontWeight="600" fill="hsl(210 40% 60%)" opacity="0.6">Execution Authority</text>
-              <text x={10} y={pad.top + plotH / 2} textAnchor="middle" fontSize="10" fontWeight="600" fill="hsl(210 40% 60%)" opacity="0.6" transform={`rotate(-90, 10, ${pad.top + plotH / 2})`}>Stakeholder Exposure</text>
+              <text x={pad.left + plotW / 2} y={svgH - 4} textAnchor="middle" fontSize="10" fontWeight="600" fill="hsl(210 40% 60%)" opacity="0.6" style={{ pointerEvents: 'none' }}>Execution Authority</text>
+              <text x={10} y={pad.top + plotH / 2} textAnchor="middle" fontSize="10" fontWeight="600" fill="hsl(210 40% 60%)" opacity="0.6" transform={`rotate(-90, 10, ${pad.top + plotH / 2})`} style={{ pointerEvents: 'none' }}>Stakeholder Exposure</text>
 
               {visiblePoints.map((point, idx) => {
                 const cx = pad.left + (point.x / 100) * plotW;
@@ -207,8 +340,10 @@ export function RiskQuadrant() {
                 const isHl = highlightedCompany === point.company;
                 const isSel = selectedPoint?.id === point.id;
                 const labelLen = point.label.length * 5 + 14;
+                const pointQuadrant: QuadrantKey = point.x >= 50 && point.y >= 50 ? 'critical' : point.x < 50 && point.y >= 50 ? 'elevated' : point.x >= 50 && point.y < 50 ? 'operational' : 'standard';
+                const isDimmedByQuadrant = selectedQuadrant && selectedQuadrant !== pointQuadrant;
                 return (
-                  <g key={point.id} className="cursor-pointer" onClick={() => setSelectedPoint(isSel ? null : point)} data-testid={`risk-point-${point.id}`}>
+                  <g key={point.id} className="cursor-pointer" onClick={(e) => { e.stopPropagation(); handlePointClick(point); }} data-testid={`risk-point-${point.id}`}>
                     {(isHl || isSel) && (
                       <>
                         <ellipse cx={cx} cy={cy} rx={labelLen / 2 + 6} ry={14} fill="none" stroke={color} strokeWidth="1" opacity="0.3" filter="url(#glow)" />
@@ -218,18 +353,18 @@ export function RiskQuadrant() {
                     <motion.rect
                       x={cx - labelLen / 2} y={cy - 9} width={labelLen} height={18} rx={9}
                       fill={color}
-                      fillOpacity={isHl || isSel ? 1 : 0.85}
+                      fillOpacity={isDimmedByQuadrant ? 0.15 : isHl || isSel ? 1 : 0.85}
                       stroke={isSel ? '#fff' : 'none'}
                       strokeWidth={isSel ? 1.5 : 0}
-                      filter="url(#point-glow)"
+                      filter={isDimmedByQuadrant ? undefined : 'url(#point-glow)'}
                       initial={{ scale: 0 }}
-                      animate={{ scale: 1, fillOpacity: isHl || isSel ? 1 : highlightedCompany ? 0.2 : 0.85 }}
+                      animate={{ scale: 1, fillOpacity: isDimmedByQuadrant ? 0.15 : isHl || isSel ? 1 : highlightedCompany ? 0.2 : 0.85 }}
                       transition={{ delay: idx * 0.03, duration: 0.4, type: 'spring', stiffness: 200 }}
                     />
                     <motion.text
                       x={cx} y={cy + 3} textAnchor="middle" fontSize="9" fontWeight="600" fill="#fff"
                       initial={{ opacity: 0 }}
-                      animate={{ opacity: highlightedCompany && !isHl && !isSel ? 0.2 : 1 }}
+                      animate={{ opacity: isDimmedByQuadrant ? 0.15 : highlightedCompany && !isHl && !isSel ? 0.2 : 1 }}
                       transition={{ delay: idx * 0.03 + 0.1 }}
                       style={{ pointerEvents: 'none' }}
                     >
@@ -257,9 +392,69 @@ export function RiskQuadrant() {
         </div>
 
         <div className="flex flex-col gap-2 min-h-0">
-          <AnimatePresence>
-            {selectedPoint && selectedClassification ? (
+          <AnimatePresence mode="wait">
+            {activeQuadrantInfo ? (
               <motion.div
+                key={`quadrant-${selectedQuadrant}`}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.25 }}
+                className="flex-shrink-0"
+              >
+                <div className="glass-card-elevated rounded-xl" style={{ boxShadow: `0 0 24px ${activeQuadrantInfo.color}15, inset 0 0 0 1px ${activeQuadrantInfo.color}25` }}>
+                  <div className="p-3 border-b border-border/20">
+                    <div className="flex items-center justify-between gap-1">
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: activeQuadrantInfo.color + '15' }}>
+                          <activeQuadrantInfo.icon className="w-4 h-4" style={{ color: activeQuadrantInfo.color, filter: `drop-shadow(0 0 4px ${activeQuadrantInfo.color}60)` }} />
+                        </div>
+                        <div>
+                          <span className="text-xs font-bold" style={{ color: activeQuadrantInfo.color }}>{activeQuadrantInfo.title}</span>
+                          <p className="text-[9px] text-muted-foreground/40">{activeQuadrantInfo.axisDescription}</p>
+                        </div>
+                      </div>
+                      <Button size="icon" variant="ghost" className="w-6 h-6 text-muted-foreground/50" onClick={() => setSelectedQuadrant(null)} data-testid="button-close-quadrant-detail"><X className="w-3.5 h-3.5" /></Button>
+                    </div>
+                  </div>
+                  <div className="p-3 space-y-2.5">
+                    <p className="text-[11px] text-muted-foreground/70 leading-relaxed">{activeQuadrantInfo.meaning}</p>
+                    <div>
+                      <p className="text-[10px] font-semibold text-muted-foreground/50 mb-0.5">Governance Response</p>
+                      <p className="text-[11px] text-muted-foreground/60 leading-relaxed">{activeQuadrantInfo.governanceResponse}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-semibold text-muted-foreground/50 mb-1">Required Controls</p>
+                      <div className="flex flex-wrap gap-1">
+                        {activeQuadrantInfo.controls.map((c, i) => (
+                          <Badge key={i} variant="outline" className="text-[9px] no-default-active-elevate px-1.5 py-0.5" style={{ borderColor: activeQuadrantInfo.color + '25', color: activeQuadrantInfo.color + 'CC' }}>{c}</Badge>
+                        ))}
+                      </div>
+                    </div>
+                    {quadrantPointsList.length > 0 && (
+                      <div>
+                        <p className="text-[10px] font-semibold text-muted-foreground/50 mb-1">Systems in this quadrant ({quadrantPointsList.length})</p>
+                        <div className="flex flex-wrap gap-1">
+                          {quadrantPointsList.map(p => (
+                            <Badge
+                              key={p.id}
+                              className="text-[9px] no-default-active-elevate px-1.5 py-0.5 cursor-pointer"
+                              style={{ backgroundColor: COMPANY_COLORS[p.company] + '20', color: COMPANY_COLORS[p.company], border: `1px solid ${COMPANY_COLORS[p.company]}30` }}
+                              onClick={() => { setSelectedPoint(p); setSelectedQuadrant(null); }}
+                              data-testid={`quadrant-system-${p.id}`}
+                            >
+                              {p.label}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            ) : selectedPoint && selectedClassification ? (
+              <motion.div
+                key={`point-${selectedPoint.id}`}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
@@ -296,8 +491,8 @@ export function RiskQuadrant() {
 
           <div className="glass-card rounded-xl p-3 flex-1 min-h-0 flex flex-col">
             <div className="flex items-center justify-between flex-shrink-0 mb-1.5">
-              <span className="text-[10px] font-semibold text-muted-foreground/50 uppercase tracking-widest">Risk Weight / Domain</span>
-              <span className="text-[9px] text-muted-foreground/25 font-mono">0-5</span>
+              <span className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-widest">Risk Weight / Domain</span>
+              <span className="text-[9px] text-muted-foreground/30 font-mono">0-5</span>
             </div>
             <div className="flex-1 min-h-0">
               <ResponsiveContainer width="100%" height="100%">
@@ -332,8 +527,8 @@ export function RiskQuadrant() {
 
           <div className="glass-card rounded-xl p-3 flex-shrink-0">
             <div className="flex items-center justify-between mb-1.5">
-              <span className="text-[10px] font-semibold text-muted-foreground/50 uppercase tracking-widest">Governance Standards</span>
-              <span className="text-[9px] text-muted-foreground/25 font-mono">{riskDomainStandards.reduce((s, d) => s + d.requirements.length, 0)} reqs</span>
+              <span className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-widest">Governance Standards</span>
+              <span className="text-[9px] text-muted-foreground/30 font-mono">{riskDomainStandards.reduce((s, d) => s + d.requirements.length, 0)} reqs</span>
             </div>
             <div className="space-y-1 max-h-[140px] overflow-y-auto">
               {riskDomainStandards.map(d => {
