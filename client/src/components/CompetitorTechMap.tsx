@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts';
 import { X, Info, Shield, AlertTriangle, Zap, Building2, Handshake, Shuffle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CompanyChips, DomainChips } from './ToggleChips';
@@ -255,17 +256,50 @@ export function CompetitorTechMap() {
         </div>
 
         <div className="w-56 flex-shrink-0 flex flex-col gap-2 min-h-0">
-          <div className="glass-card rounded-xl p-2.5 flex-shrink-0">
+          <div className="glass-card rounded-xl p-2.5 flex-1 min-h-0 flex flex-col" data-testid="panel-systems-company">
             <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Systems / Company</span>
-            <div className="mt-2 space-y-1.5">
+            <div className="flex-1 min-h-0 flex items-center">
+              <div className="relative w-full" style={{ height: 130 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={companySystemCounts}
+                      dataKey="count"
+                      nameKey="company"
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={28}
+                      outerRadius={52}
+                      paddingAngle={3}
+                      strokeWidth={0}
+                      animationDuration={800}
+                      animationEasing="ease-out"
+                    >
+                      {companySystemCounts.map((c) => (
+                        <Cell key={c.fullName} fill={c.color} style={{ filter: `drop-shadow(0 0 4px ${c.color}50)` }} />
+                      ))}
+                    </Pie>
+                    <RechartsTooltip
+                      contentStyle={{ backgroundColor: 'hsl(222 22% 11%)', border: '1px solid hsl(217 20% 20%)', borderRadius: 8, fontSize: 11, color: 'hsl(210 40% 90%)' }}
+                      formatter={(value: number, name: string) => [`${value} systems`, name]}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <div className="text-center">
+                    <p className="text-lg font-bold text-primary leading-none">{techStats.total}</p>
+                    <p className="text-[9px] text-muted-foreground/60 uppercase">total</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="space-y-1 flex-shrink-0">
               {companySystemCounts.map((c) => (
                 <div key={c.fullName} className="flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: c.color, boxShadow: `0 0 5px ${c.color}40` }} />
+                  <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: c.color, boxShadow: `0 0 4px ${c.color}40` }} />
                   <span className="text-[11px] text-muted-foreground flex-1 truncate">{c.company}</span>
-                  <div className="w-14 h-2 rounded-full overflow-hidden" style={{ backgroundColor: 'hsl(217 20% 15%)' }}>
-                    <div className="h-full rounded-full" style={{ width: `${(c.count / Math.max(...companySystemCounts.map(x => x.count))) * 100}%`, backgroundColor: c.color, boxShadow: `0 0 4px ${c.color}50` }} />
-                  </div>
-                  <span className="text-xs font-bold font-mono w-4 text-right" style={{ color: c.color }}>{c.count}</span>
+                  <span className="text-[11px] font-bold font-mono" style={{ color: c.color }}>{c.count}</span>
+                  <span className="text-[10px] text-muted-foreground/40 w-7 text-right">{techStats.total > 0 ? Math.round((c.count / techStats.total) * 100) : 0}%</span>
                 </div>
               ))}
             </div>
@@ -273,56 +307,75 @@ export function CompetitorTechMap() {
 
           <div className="glass-card rounded-xl p-2.5 flex-shrink-0" data-testid="panel-build-source">
             <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Build Source</span>
-            <p className="text-[10px] text-muted-foreground/50 mb-1.5">Where systems are developed</p>
-            <div className="space-y-1.5">
-              {sourceBreakdown.map((s) => (
-                <div key={s.label} className="flex items-center gap-1.5">
-                  <s.Icon className="w-3.5 h-3.5 flex-shrink-0" style={{ color: s.color }} />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-0.5">
-                      <span className="text-[11px] font-medium">{s.label}</span>
-                      <span className="text-xs font-bold font-mono" style={{ color: s.color }}>{s.count}</span>
-                    </div>
-                    <div className="h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: 'hsl(217 20% 15%)' }}>
-                      <motion.div
-                        className="h-full rounded-full"
-                        style={{ backgroundColor: s.color, boxShadow: `0 0 4px ${s.color}50` }}
-                        initial={{ width: 0 }}
-                        animate={{ width: `${techStats.total > 0 ? (s.count / techStats.total) * 100 : 0}%` }}
-                        transition={{ duration: 0.6 }}
-                      />
-                    </div>
+            <div className="flex items-center gap-2 mt-1">
+              <div className="relative flex-shrink-0" style={{ width: 64, height: 64 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={sourceBreakdown.filter(s => s.count > 0)}
+                      dataKey="count"
+                      nameKey="label"
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={16}
+                      outerRadius={28}
+                      paddingAngle={4}
+                      strokeWidth={0}
+                      animationDuration={800}
+                    >
+                      {sourceBreakdown.filter(s => s.count > 0).map((s) => (
+                        <Cell key={s.label} fill={s.color} style={{ filter: `drop-shadow(0 0 3px ${s.color}40)` }} />
+                      ))}
+                    </Pie>
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="flex-1 min-w-0 space-y-1">
+                {sourceBreakdown.map((s) => (
+                  <div key={s.label} className="flex items-center gap-1">
+                    <s.Icon className="w-3 h-3 flex-shrink-0" style={{ color: s.color }} />
+                    <span className="text-[10px] text-muted-foreground flex-1">{s.label}</span>
+                    <span className="text-[11px] font-bold font-mono" style={{ color: s.color }}>{s.count}</span>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
 
-          <div className="glass-card rounded-xl p-2.5 flex-1 min-h-0 flex flex-col" data-testid="panel-autonomy-level">
+          <div className="glass-card rounded-xl p-2.5 flex-shrink-0" data-testid="panel-autonomy-level">
             <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Autonomy Level</span>
-            <p className="text-[10px] text-muted-foreground/50 mb-1.5">How much AI decides on its own</p>
-            <div className="space-y-1.5 flex-1">
-              {tierBreakdown.map((t) => (
-                <div key={t.label} className="flex items-center gap-1.5">
-                  <t.Icon className="w-3.5 h-3.5 flex-shrink-0" style={{ color: t.color }} />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-0.5">
-                      <span className="text-[11px] font-medium">{t.label}</span>
-                      <span className="text-xs font-bold font-mono" style={{ color: t.color }}>{t.count}</span>
-                    </div>
-                    <div className="h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: 'hsl(217 20% 15%)' }}>
-                      <motion.div
-                        className="h-full rounded-full"
-                        style={{ backgroundColor: t.color, boxShadow: `0 0 4px ${t.color}50` }}
-                        initial={{ width: 0 }}
-                        animate={{ width: `${techStats.total > 0 ? (t.count / techStats.total) * 100 : 0}%` }}
-                        transition={{ duration: 0.6 }}
-                      />
-                    </div>
-                    <span className="text-[10px] text-muted-foreground/50">{t.desc}</span>
+            <div className="flex items-center gap-2 mt-1">
+              <div className="relative flex-shrink-0" style={{ width: 64, height: 64 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={tierBreakdown.filter(t => t.count > 0)}
+                      dataKey="count"
+                      nameKey="label"
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={16}
+                      outerRadius={28}
+                      paddingAngle={4}
+                      strokeWidth={0}
+                      animationDuration={800}
+                    >
+                      {tierBreakdown.filter(t => t.count > 0).map((t) => (
+                        <Cell key={t.label} fill={t.color} style={{ filter: `drop-shadow(0 0 3px ${t.color}40)` }} />
+                      ))}
+                    </Pie>
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="flex-1 min-w-0 space-y-1">
+                {tierBreakdown.map((t) => (
+                  <div key={t.label} className="flex items-center gap-1">
+                    <t.Icon className="w-3 h-3 flex-shrink-0" style={{ color: t.color }} />
+                    <span className="text-[10px] text-muted-foreground flex-1">{t.label}</span>
+                    <span className="text-[11px] font-bold font-mono" style={{ color: t.color }}>{t.count}</span>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
         </div>
