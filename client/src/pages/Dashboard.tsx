@@ -76,7 +76,7 @@ function DashboardInner() {
   if (presentationMode) {
     return (
       <div className="fixed inset-0 z-50 bg-background flex flex-col">
-        <div className="flex items-center justify-between px-6 py-3 border-b border-border/50">
+        <div className="flex items-center justify-between px-6 py-2.5 border-b border-border/50">
           <div>
             <h1 className="text-lg font-bold tracking-tight gradient-text">Agentic AI Governance</h1>
           </div>
@@ -88,7 +88,7 @@ function DashboardInner() {
             </Button>
           </div>
         </div>
-        <div className="flex-1 min-h-0 p-6 tech-grid-bg flex flex-col">
+        <div className="flex-1 min-h-0 p-4 tech-grid-bg flex flex-col">
           <div className="max-w-7xl mx-auto w-full flex-1 min-h-0">
             <StepContent step={currentStep} />
           </div>
@@ -229,45 +229,35 @@ function DashboardInner() {
         </Sidebar>
 
         <div className="flex flex-col flex-1 min-w-0">
-          <header className="flex items-center justify-between gap-2 px-4 py-1.5 border-b border-border/50 bg-background/80 backdrop-blur-sm">
-            <div className="flex items-center gap-2">
+          <header className="flex items-center justify-between gap-2 px-4 py-1.5 border-b border-border/50 bg-background/80 backdrop-blur-sm flex-shrink-0">
+            <div className="flex items-center gap-3">
               <SidebarTrigger data-testid="button-sidebar-toggle" />
-              <div>
-                <h1 className="text-sm font-bold tracking-tight leading-tight gradient-text">Agentic AI Governance Framework</h1>
-                <p className="text-[10px] text-muted-foreground/60">Harvard Kennedy School</p>
-              </div>
+              <h1 className="text-base font-bold tracking-tight leading-tight gradient-text">Agentic AI Governance</h1>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              className="border-primary/30 text-primary hover:bg-primary/10"
-              onClick={() => dispatch({ type: 'TOGGLE_PRESENTATION' })}
-              data-testid="button-presentation-mode"
-            >
-              <Maximize className="w-4 h-4 mr-1" />
-              Present
-            </Button>
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-muted-foreground">{STEPS[currentStep].title}</span>
+              <Badge variant="outline" className="font-mono text-xs no-default-active-elevate border-primary/30 text-primary">{currentStep + 1} / {STEPS.length}</Badge>
+              <Button
+                variant="outline"
+                size="icon"
+                className="border-primary/30 text-primary hover:bg-primary/10 w-7 h-7"
+                onClick={() => dispatch({ type: 'TOGGLE_PRESENTATION' })}
+                data-testid="button-presentation-mode"
+              >
+                <Maximize className="w-3.5 h-3.5" />
+              </Button>
+            </div>
           </header>
-          <div className="accent-line" />
+          <div className="accent-line flex-shrink-0" />
 
-          <main className="flex-1 overflow-hidden tech-grid-bg flex flex-col">
-            <div className="max-w-7xl mx-auto px-4 pt-2 pb-1 flex-1 w-full flex flex-col min-h-0">
-              <div className="mb-1.5 flex items-center gap-2 flex-shrink-0">
-                <div className="w-6 h-6 rounded-md flex items-center justify-center glow-border-blue" style={{ backgroundColor: 'hsl(199 89% 48% / 0.1)' }}>
-                  {(() => { const Icon = STEP_ICONS[currentStep]; return <Icon className="w-3.5 h-3.5 text-primary" />; })()}
-                </div>
-                <div>
-                  <h2 className="text-sm font-bold leading-tight">{STEPS[currentStep].title}</h2>
-                  <p className="text-[10px] text-muted-foreground/70">{STEPS[currentStep].subtitle}</p>
-                </div>
-              </div>
-
+          <main className="flex-1 overflow-hidden tech-grid-bg flex flex-col min-h-0">
+            <div className="max-w-7xl mx-auto px-4 py-2 flex-1 w-full flex flex-col min-h-0">
               <div className="flex-1 min-h-0">
                 <StepContent step={currentStep} />
               </div>
 
               {mode === 'story' && (
-                <div className="flex items-center justify-between mt-1.5 pt-1.5 border-t border-border/30 flex-shrink-0">
+                <div className="flex items-center justify-between pt-1.5 border-t border-border/30 flex-shrink-0">
                   <Button
                     variant="outline"
                     size="sm"

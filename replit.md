@@ -53,6 +53,10 @@ client/src/
 - Accent line (`.accent-line`) gradient separator under header
 - Company colors: DoorDash #FF3008, Uber Eats #276EF1, Instacart #43B02A, Grubhub #F97316, Meituan #A855F7
 - Autonomy tiers: Shield icon (Assistive/blue), AlertTriangle (Conditional/orange), Zap (Autonomous/red)
+- 8 domain colors: Brand=purple, Communications=cyan, Public Policy=red, Legal=pink, Insurance=orange, Trust & Safety=crimson, Values Alignment=green, Regulatory=yellow
+- 6 stage colors: S1=cyan, S2=purple, S3=orange, S4=red, S5=green, S6=yellow
+- Font sizing: minimum text-[10px] for smallest labels, text-xs (12px) for primary content, text-sm/text-base for headers
+- Dark scrollbar styling: webkit-scrollbar with dark track/thumb, Firefox scrollbar-color
 - No emoji anywhere; lucide-react icons only
 
 ## 4-Page Storyline
