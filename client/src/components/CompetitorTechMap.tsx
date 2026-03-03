@@ -2,10 +2,6 @@ import { useState, useMemo } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import {
-  PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip,
-  BarChart, Bar, XAxis, YAxis, CartesianGrid,
-} from 'recharts';
 import { X, Info, Shield, AlertTriangle, Zap, Building2, Handshake, Shuffle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CompanyChips, DomainChips } from './ToggleChips';
@@ -63,12 +59,16 @@ export function CompetitorTechMap() {
     return stats;
   }, [selectedCompanies, selectedDomains]);
 
-  const autonomyDistData = useMemo(() => [
-    { tier: 'In-house', count: techStats.inHouse, color: 'hsl(199 89% 48%)' },
-    { tier: 'Partner', count: techStats.partner, color: 'hsl(280 65% 65%)' },
-    { tier: 'Assistive', count: techStats.assistive, color: 'hsl(199 89% 48%)' },
-    { tier: 'Conditional', count: techStats.conditional, color: 'hsl(27 87% 55%)' },
-    { tier: 'Autonomous', count: techStats.autonomous, color: 'hsl(0 84% 55%)' },
+  const sourceBreakdown = useMemo(() => [
+    { label: 'In-house', count: techStats.inHouse, color: 'hsl(199 89% 48%)', Icon: Building2, desc: 'Built internally' },
+    { label: 'Partner', count: techStats.partner, color: 'hsl(280 65% 65%)', Icon: Handshake, desc: 'External vendor' },
+    { label: 'Mixed', count: techStats.mixed, color: 'hsl(27 87% 55%)', Icon: Shuffle, desc: 'Joint development' },
+  ], [techStats]);
+
+  const tierBreakdown = useMemo(() => [
+    { label: 'Assistive', count: techStats.assistive, color: 'hsl(199 89% 48%)', Icon: Shield, desc: 'Human decides' },
+    { label: 'Conditional', count: techStats.conditional, color: 'hsl(27 87% 55%)', Icon: AlertTriangle, desc: 'AI decides w/ limits' },
+    { label: 'Autonomous', count: techStats.autonomous, color: 'hsl(0 84% 55%)', Icon: Zap, desc: 'AI decides alone' },
   ], [techStats]);
 
   const companySystemCounts = useMemo(() => {
@@ -271,21 +271,58 @@ export function CompetitorTechMap() {
             </div>
           </div>
 
-          <div className="glass-card rounded-xl p-2.5 flex-1 min-h-0 flex flex-col">
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex-shrink-0 mb-1">Source & Tier</span>
-            <div className="flex-1 min-h-0">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={autonomyDistData} layout="vertical" margin={{ left: 0, right: 4, top: 0, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(217 20% 15%)" horizontal={false} />
-                  <XAxis type="number" tick={{ fill: 'hsl(215 20% 45%)', fontSize: 10 }} axisLine={false} tickLine={false} />
-                  <YAxis type="category" dataKey="tier" width={72} tick={{ fill: 'hsl(210 40% 80%)', fontSize: 10 }} axisLine={false} tickLine={false} />
-                  <Bar dataKey="count" radius={[0, 4, 4, 0]} animationDuration={800}>
-                    {autonomyDistData.map((entry) => (
-                      <Cell key={entry.tier} fill={entry.color} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+          <div className="glass-card rounded-xl p-2.5 flex-shrink-0" data-testid="panel-build-source">
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Build Source</span>
+            <p className="text-[10px] text-muted-foreground/50 mb-1.5">Where systems are developed</p>
+            <div className="space-y-1.5">
+              {sourceBreakdown.map((s) => (
+                <div key={s.label} className="flex items-center gap-1.5">
+                  <s.Icon className="w-3.5 h-3.5 flex-shrink-0" style={{ color: s.color }} />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between mb-0.5">
+                      <span className="text-[11px] font-medium">{s.label}</span>
+                      <span className="text-xs font-bold font-mono" style={{ color: s.color }}>{s.count}</span>
+                    </div>
+                    <div className="h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: 'hsl(217 20% 15%)' }}>
+                      <motion.div
+                        className="h-full rounded-full"
+                        style={{ backgroundColor: s.color, boxShadow: `0 0 4px ${s.color}50` }}
+                        initial={{ width: 0 }}
+                        animate={{ width: `${techStats.total > 0 ? (s.count / techStats.total) * 100 : 0}%` }}
+                        transition={{ duration: 0.6 }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="glass-card rounded-xl p-2.5 flex-1 min-h-0 flex flex-col" data-testid="panel-autonomy-level">
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Autonomy Level</span>
+            <p className="text-[10px] text-muted-foreground/50 mb-1.5">How much AI decides on its own</p>
+            <div className="space-y-1.5 flex-1">
+              {tierBreakdown.map((t) => (
+                <div key={t.label} className="flex items-center gap-1.5">
+                  <t.Icon className="w-3.5 h-3.5 flex-shrink-0" style={{ color: t.color }} />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between mb-0.5">
+                      <span className="text-[11px] font-medium">{t.label}</span>
+                      <span className="text-xs font-bold font-mono" style={{ color: t.color }}>{t.count}</span>
+                    </div>
+                    <div className="h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: 'hsl(217 20% 15%)' }}>
+                      <motion.div
+                        className="h-full rounded-full"
+                        style={{ backgroundColor: t.color, boxShadow: `0 0 4px ${t.color}50` }}
+                        initial={{ width: 0 }}
+                        animate={{ width: `${techStats.total > 0 ? (t.count / techStats.total) * 100 : 0}%` }}
+                        transition={{ duration: 0.6 }}
+                      />
+                    </div>
+                    <span className="text-[10px] text-muted-foreground/50">{t.desc}</span>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
