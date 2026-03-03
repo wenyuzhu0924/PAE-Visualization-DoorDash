@@ -412,9 +412,115 @@ export const controlSwimlanes = [
   },
 ];
 
+export interface RiskDomainStandard {
+  id: string;
+  domain: string;
+  requirements: { id: string; name: string; riskWeight: number; kpi: string }[];
+}
+
+export const riskDomainStandards: RiskDomainStandard[] = [
+  {
+    id: 'brand', domain: 'Brand',
+    requirements: [
+      { id: 'BR01', name: 'Tone & Voice Consistency', riskWeight: 3, kpi: '<5% negative CSAT shift' },
+      { id: 'BR02', name: 'Merchant Brand Protection', riskWeight: 4, kpi: '0% hallucination rate' },
+      { id: 'BR03', name: 'Avoid Creepy Personalization', riskWeight: 2, kpi: '<1 per 1M interactions' },
+      { id: 'BR04', name: 'Crisis Sensitivity', riskWeight: 5, kpi: '<5 min activation' },
+    ],
+  },
+  {
+    id: 'comms', domain: 'Communications',
+    requirements: [
+      { id: 'CM01', name: 'Bot Disclosure (Robo-ID)', riskWeight: 4, kpi: '100% first-turn disclosure' },
+      { id: 'CM02', name: 'Explainability of Decisions', riskWeight: 3, kpi: '<15% ticket re-open' },
+      { id: 'CM03', name: 'Human Handoff Protocols', riskWeight: 4, kpi: '<45s frustration handoff' },
+    ],
+  },
+  {
+    id: 'policy', domain: 'Public Policy',
+    requirements: [
+      { id: 'PP01', name: 'Dasher Independence Check', riskWeight: 5, kpi: '<20/100 control score' },
+      { id: 'PP02', name: 'Algorithmic Wage Impact', riskWeight: 5, kpi: '0 sub-floor violations' },
+      { id: 'PP03', name: 'Data Sovereignty', riskWeight: 4, kpi: '0 bytes non-compliant' },
+    ],
+  },
+  {
+    id: 'legal', domain: 'Legal',
+    requirements: [
+      { id: 'LG01', name: 'Contractual Hallucination', riskWeight: 5, kpi: '<$1K/mo unauthorized' },
+      { id: 'LG02', name: 'IP Rights (GenAI)', riskWeight: 3, kpi: '<0.1% flagged assets' },
+      { id: 'LG03', name: 'Biometric Data Usage', riskWeight: 5, kpi: '100% consent matched' },
+    ],
+  },
+  {
+    id: 'insurance', domain: 'Insurance',
+    requirements: [
+      { id: 'IN01', name: 'Physical Safety Routing', riskWeight: 5, kpi: '<1 per 10M deliveries' },
+      { id: 'IN02', name: 'Large Scale Ordering Errors', riskWeight: 4, kpi: '>200% circuit breaker' },
+      { id: 'IN03', name: 'Cyber Liability Scope', riskWeight: 3, kpi: 'Quarterly scope audit' },
+    ],
+  },
+  {
+    id: 'trust', domain: 'Trust & Safety',
+    requirements: [
+      { id: 'TS01', name: 'Harassment Detection', riskWeight: 5, kpi: '>99% recall rate' },
+      { id: 'TS02', name: 'Food Safety Advisory', riskWeight: 5, kpi: '0% safety hallucination' },
+      { id: 'TS03', name: 'Fraud Vector Vulnerability', riskWeight: 4, kpi: '<5% jailbreak success' },
+    ],
+  },
+  {
+    id: 'values', domain: 'Values Alignment',
+    requirements: [
+      { id: 'VA01', name: 'Algorithmic Fairness', riskWeight: 4, kpi: '<5% earnings variance' },
+      { id: 'VA02', name: 'Tipping Neutrality', riskWeight: 3, kpi: 'Ethics review pass' },
+      { id: 'VA03', name: 'Merchant Neutrality', riskWeight: 3, kpi: '+/-10% exposure ratio' },
+    ],
+  },
+  {
+    id: 'regulatory', domain: 'Regulatory',
+    requirements: [
+      { id: 'RG01', name: 'Restricted Goods', riskWeight: 5, kpi: '0 age-gate bypasses' },
+      { id: 'RG02', name: 'Record Keeping', riskWeight: 4, kpi: '100% log retention' },
+      { id: 'RG03', name: 'Right to Explanation', riskWeight: 4, kpi: '<24h logic retrieval' },
+    ],
+  },
+];
+
+export const platformMetrics = {
+  dailyAIInteractions: 35000,
+  resolutionRate: 94,
+  avgLatency: 2.5,
+  messagesPerMinute: 1400,
+  marketSize2023: 3.7,
+  marketSize2032: 100,
+  doordashSystems: 8,
+  autonomousCount: 7,
+};
+
+export interface ImplPhase {
+  id: number;
+  name: string;
+  focus: string;
+  timeline: string;
+  tasks: string[];
+}
+
+export const implementationPhases: ImplPhase[] = [
+  { id: 1, name: 'Phase 1', focus: 'Governance Alignment', timeline: '0-2 months', tasks: ['Define autonomy tiers', 'Finalize spec templates', 'Assign governance ownership', 'Launch MVP dashboard'] },
+  { id: 2, name: 'Phase 2', focus: 'Pilot Integration', timeline: '2-4 months', tasks: ['Sandbox pilot on high-impact system', 'Institutionalize red-teaming', 'Integrate with CI/CD pipeline', 'Monthly governance reviews'] },
+  { id: 3, name: 'Phase 3', focus: 'Scaling & Review', timeline: '4-12 months', tasks: ['Expand to all conditional/autonomous systems', 'Require sandbox eval for expansion', 'Continuous monitoring infra', 'Annual framework audit'] },
+];
+
+export const redTeamCategories = [
+  { id: 'A', name: 'Financial Exploitation', target: 'LG01', description: 'Coerce AI into granting unauthorized financial benefits', severity: 5 },
+  { id: 'B', name: 'Regulatory Compliance', target: 'PP01', description: 'Trick agent into employer-like language violating IC status', severity: 4 },
+  { id: 'C', name: 'Trust & Safety', target: 'RG01', description: 'Bypass age-gating or safety restrictions via logic traps', severity: 5 },
+  { id: 'D', name: 'Brand Integrity', target: 'BR04', description: 'Generate insensitive content during simulated emergencies', severity: 3 },
+];
+
 export const STEPS = [
-  { id: 0, title: 'Capability Comparison', subtitle: 'AI Strategic Profile & Maturity', icon: 'radar' },
-  { id: 1, title: 'Technology Map', subtitle: 'Competitor Tech Stack Matrix', icon: 'grid' },
-  { id: 2, title: 'Risk Quadrant', subtitle: 'Governance Risk Prioritization', icon: 'target' },
-  { id: 3, title: 'Governance Playbook', subtitle: 'Stage-Gated Lifecycle Controls', icon: 'book' },
+  { id: 0, title: 'Industry Landscape', subtitle: 'Market Position & Capability Benchmarking', icon: 'radar' },
+  { id: 1, title: 'Technology Stack', subtitle: 'Agentic AI Systems Across Platforms', icon: 'grid' },
+  { id: 2, title: 'Risk Architecture', subtitle: 'Multi-Dimensional Governance Risk', icon: 'target' },
+  { id: 3, title: 'Deployment Playbook', subtitle: 'Lifecycle Controls & Implementation', icon: 'book' },
 ] as const;

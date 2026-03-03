@@ -2,12 +2,15 @@ import { useState, useMemo } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import { X, ShieldAlert, ShieldCheck, Activity, Shield } from 'lucide-react';
+import {
+  BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell,
+} from 'recharts';
+import { X, ShieldAlert, ShieldCheck, Activity, Shield, Layers, Scale, FileWarning, Gavel } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CompanyChips } from './ToggleChips';
 import { useDashboard } from '@/lib/DashboardContext';
 import {
-  COMPANIES, COMPANY_COLORS, riskPoints,
+  COMPANIES, COMPANY_COLORS, riskPoints, riskDomainStandards,
   type RiskPoint,
 } from '@/lib/data';
 
@@ -45,6 +48,17 @@ const TIER_ICONS = {
   standard: ShieldCheck,
 };
 
+const DOMAIN_ICONS: Record<string, typeof Shield> = {
+  Brand: Shield,
+  Communications: Activity,
+  'Public Policy': Gavel,
+  Legal: Scale,
+  Insurance: FileWarning,
+  'Trust & Safety': ShieldAlert,
+  'Values Alignment': Layers,
+  Regulatory: Gavel,
+};
+
 export function RiskQuadrant() {
   const { state, dispatch } = useDashboard();
   const { selectedCompanies, highlightedCompany } = state;
@@ -77,14 +91,24 @@ export function RiskQuadrant() {
     return counts;
   }, [visiblePoints]);
 
-  const svgW = 620;
-  const svgH = 480;
-  const pad = { top: 40, right: 40, bottom: 50, left: 60 };
+  const riskWeightData = useMemo(() => {
+    return riskDomainStandards.map(d => ({
+      domain: d.domain.length > 12 ? d.domain.slice(0, 10) + '..' : d.domain,
+      fullDomain: d.domain,
+      avgWeight: d.requirements.reduce((s, r) => s + r.riskWeight, 0) / d.requirements.length,
+      maxWeight: Math.max(...d.requirements.map(r => r.riskWeight)),
+      count: d.requirements.length,
+    }));
+  }, []);
+
+  const svgW = 560;
+  const svgH = 420;
+  const pad = { top: 35, right: 35, bottom: 45, left: 55 };
   const plotW = svgW - pad.left - pad.right;
   const plotH = svgH - pad.top - pad.bottom;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <CompanyChips
           companies={COMPANIES}
@@ -95,11 +119,11 @@ export function RiskQuadrant() {
         />
         <div className="flex items-center gap-4 text-xs">
           <label className="flex items-center gap-2 cursor-pointer text-muted-foreground" data-testid="toggle-doordash-layer">
-            <Switch checked={showDoorDash} onCheckedChange={setShowDoorDash} />
+            <Switch checked={showDoorDash} onCheckedChange={setShowDoorDash} data-testid="switch-doordash" />
             DoorDash
           </label>
           <label className="flex items-center gap-2 cursor-pointer text-muted-foreground" data-testid="toggle-competitor-layer">
-            <Switch checked={showCompetitors} onCheckedChange={setShowCompetitors} />
+            <Switch checked={showCompetitors} onCheckedChange={setShowCompetitors} data-testid="switch-competitors" />
             Competitors
           </label>
         </div>
@@ -112,210 +136,192 @@ export function RiskQuadrant() {
           { label: 'Operational', count: quadrantCounts.operational, color: 'hsl(199 89% 48%)', glow: 'glow-border-blue', Icon: Activity },
           { label: 'Standard', count: quadrantCounts.standard, color: 'hsl(142 76% 45%)', glow: 'glow-border-green', Icon: ShieldCheck },
         ].map(q => (
-          <div key={q.label} className={`glass-card rounded-lg p-2.5 flex items-center gap-2.5 ${q.glow}`} data-testid={`quadrant-count-${q.label.toLowerCase()}`}>
+          <motion.div
+            key={q.label}
+            className={`glass-card rounded-lg p-2.5 flex items-center gap-2.5 ${q.glow}`}
+            data-testid={`quadrant-count-${q.label.toLowerCase()}`}
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+          >
             <q.Icon className="w-4 h-4 flex-shrink-0" style={{ color: q.color }} />
             <span className="text-xl font-bold" style={{ color: q.color }}>{q.count}</span>
             <span className="text-[11px] text-muted-foreground">{q.label}</span>
-          </div>
+          </motion.div>
         ))}
       </div>
 
-      <div className="flex gap-5">
-        <div className="flex-1">
-          <div className="glass-card rounded-xl p-4 glow-border-blue">
-            <div className="w-full overflow-x-auto">
-              <svg viewBox={`0 0 ${svgW} ${svgH}`} className="w-full max-w-[700px] mx-auto" style={{ fontFamily: 'var(--font-sans)' }}>
-                <defs>
-                  <linearGradient id="q-tl" x1="0" y1="0" x2="1" y2="1">
-                    <stop offset="0%" stopColor="hsl(27 87% 50%)" stopOpacity="0.12" />
-                    <stop offset="100%" stopColor="hsl(27 87% 50%)" stopOpacity="0.02" />
-                  </linearGradient>
-                  <linearGradient id="q-tr" x1="0" y1="0" x2="1" y2="1">
-                    <stop offset="0%" stopColor="hsl(0 84% 55%)" stopOpacity="0.12" />
-                    <stop offset="100%" stopColor="hsl(0 84% 55%)" stopOpacity="0.02" />
-                  </linearGradient>
-                  <linearGradient id="q-bl" x1="0" y1="0" x2="1" y2="1">
-                    <stop offset="0%" stopColor="hsl(142 76% 45%)" stopOpacity="0.02" />
-                    <stop offset="100%" stopColor="hsl(142 76% 45%)" stopOpacity="0.10" />
-                  </linearGradient>
-                  <linearGradient id="q-br" x1="0" y1="0" x2="1" y2="1">
-                    <stop offset="0%" stopColor="hsl(199 89% 48%)" stopOpacity="0.02" />
-                    <stop offset="100%" stopColor="hsl(199 89% 48%)" stopOpacity="0.10" />
-                  </linearGradient>
-                  <filter id="glow">
-                    <feGaussianBlur stdDeviation="3" result="blur" />
-                    <feMerge>
-                      <feMergeNode in="blur" />
-                      <feMergeNode in="SourceGraphic" />
-                    </feMerge>
-                  </filter>
-                </defs>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="lg:col-span-2 glass-card rounded-xl p-4 glow-border-blue">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Risk Positioning</span>
+            <span className="text-[10px] text-muted-foreground font-mono">{visiblePoints.length} systems mapped</span>
+          </div>
+          <div className="w-full overflow-x-auto">
+            <svg viewBox={`0 0 ${svgW} ${svgH}`} className="w-full max-w-[640px] mx-auto" style={{ fontFamily: 'var(--font-sans)' }}>
+              <defs>
+                <linearGradient id="q-tl" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stopColor="hsl(27 87% 50%)" stopOpacity="0.12" />
+                  <stop offset="100%" stopColor="hsl(27 87% 50%)" stopOpacity="0.02" />
+                </linearGradient>
+                <linearGradient id="q-tr" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stopColor="hsl(0 84% 55%)" stopOpacity="0.12" />
+                  <stop offset="100%" stopColor="hsl(0 84% 55%)" stopOpacity="0.02" />
+                </linearGradient>
+                <linearGradient id="q-bl" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stopColor="hsl(142 76% 45%)" stopOpacity="0.02" />
+                  <stop offset="100%" stopColor="hsl(142 76% 45%)" stopOpacity="0.10" />
+                </linearGradient>
+                <linearGradient id="q-br" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stopColor="hsl(199 89% 48%)" stopOpacity="0.02" />
+                  <stop offset="100%" stopColor="hsl(199 89% 48%)" stopOpacity="0.10" />
+                </linearGradient>
+                <filter id="glow"><feGaussianBlur stdDeviation="3" result="blur" /><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
+              </defs>
 
-                <rect x={pad.left} y={pad.top} width={plotW / 2} height={plotH / 2} fill="url(#q-tl)" />
-                <rect x={pad.left + plotW / 2} y={pad.top} width={plotW / 2} height={plotH / 2} fill="url(#q-tr)" />
-                <rect x={pad.left} y={pad.top + plotH / 2} width={plotW / 2} height={plotH / 2} fill="url(#q-bl)" />
-                <rect x={pad.left + plotW / 2} y={pad.top + plotH / 2} width={plotW / 2} height={plotH / 2} fill="url(#q-br)" />
+              <rect x={pad.left} y={pad.top} width={plotW / 2} height={plotH / 2} fill="url(#q-tl)" />
+              <rect x={pad.left + plotW / 2} y={pad.top} width={plotW / 2} height={plotH / 2} fill="url(#q-tr)" />
+              <rect x={pad.left} y={pad.top + plotH / 2} width={plotW / 2} height={plotH / 2} fill="url(#q-bl)" />
+              <rect x={pad.left + plotW / 2} y={pad.top + plotH / 2} width={plotW / 2} height={plotH / 2} fill="url(#q-br)" />
 
-                <line x1={pad.left} y1={pad.top + plotH / 2} x2={pad.left + plotW} y2={pad.top + plotH / 2} stroke="hsl(217 20% 22%)" strokeWidth="1" strokeDasharray="4 4" />
-                <line x1={pad.left + plotW / 2} y1={pad.top} x2={pad.left + plotW / 2} y2={pad.top + plotH} stroke="hsl(217 20% 22%)" strokeWidth="1" strokeDasharray="4 4" />
+              <line x1={pad.left} y1={pad.top + plotH / 2} x2={pad.left + plotW} y2={pad.top + plotH / 2} stroke="hsl(217 20% 22%)" strokeWidth="1" strokeDasharray="4 4" />
+              <line x1={pad.left + plotW / 2} y1={pad.top} x2={pad.left + plotW / 2} y2={pad.top + plotH} stroke="hsl(217 20% 22%)" strokeWidth="1" strokeDasharray="4 4" />
+              <rect x={pad.left} y={pad.top} width={plotW} height={plotH} fill="none" stroke="hsl(217 20% 20%)" strokeWidth="1" rx="4" />
 
-                <rect x={pad.left} y={pad.top} width={plotW} height={plotH} fill="none" stroke="hsl(217 20% 20%)" strokeWidth="1" rx="4" />
+              <text x={pad.left + plotW / 4} y={pad.top + 18} textAnchor="middle" fontSize="10" fontWeight="700" fill="hsl(27 87% 60%)" filter="url(#glow)">ELEVATED</text>
+              <text x={pad.left + 3 * plotW / 4} y={pad.top + 18} textAnchor="middle" fontSize="10" fontWeight="700" fill="hsl(0 84% 60%)" filter="url(#glow)">CRITICAL</text>
+              <text x={pad.left + plotW / 4} y={pad.top + plotH - 8} textAnchor="middle" fontSize="10" fontWeight="700" fill="hsl(142 76% 50%)" filter="url(#glow)">STANDARD</text>
+              <text x={pad.left + 3 * plotW / 4} y={pad.top + plotH - 8} textAnchor="middle" fontSize="10" fontWeight="700" fill="hsl(199 89% 55%)" filter="url(#glow)">OPERATIONAL</text>
 
-                <text x={pad.left + plotW / 4} y={pad.top + 20} textAnchor="middle" fontSize="11" fontWeight="700" fill="hsl(27 87% 60%)" filter="url(#glow)">ELEVATED</text>
-                <text x={pad.left + 3 * plotW / 4} y={pad.top + 20} textAnchor="middle" fontSize="11" fontWeight="700" fill="hsl(0 84% 60%)" filter="url(#glow)">CRITICAL</text>
-                <text x={pad.left + plotW / 4} y={pad.top + plotH - 10} textAnchor="middle" fontSize="11" fontWeight="700" fill="hsl(142 76% 50%)" filter="url(#glow)">STANDARD</text>
-                <text x={pad.left + 3 * plotW / 4} y={pad.top + plotH - 10} textAnchor="middle" fontSize="11" fontWeight="700" fill="hsl(199 89% 55%)" filter="url(#glow)">OPERATIONAL</text>
+              <text x={pad.left + plotW / 2} y={svgH - 6} textAnchor="middle" fontSize="10" fontWeight="600" fill="hsl(210 40% 70%)">Execution Authority</text>
+              <text x={12} y={pad.top + plotH / 2} textAnchor="middle" fontSize="10" fontWeight="600" fill="hsl(210 40% 70%)" transform={`rotate(-90, 12, ${pad.top + plotH / 2})`}>Stakeholder Exposure</text>
 
-                <text x={pad.left + plotW / 2} y={svgH - 8} textAnchor="middle" fontSize="11" fontWeight="600" fill="hsl(210 40% 70%)">Execution Authority</text>
-                <text x={pad.left - 4} y={svgH - 18} textAnchor="end" fontSize="9" fill="hsl(215 20% 45%)">Assistive</text>
-                <text x={pad.left + plotW + 4} y={svgH - 18} textAnchor="start" fontSize="9" fill="hsl(215 20% 45%)">Autonomous</text>
-
-                <text x={12} y={pad.top + plotH / 2} textAnchor="middle" fontSize="11" fontWeight="600" fill="hsl(210 40% 70%)" transform={`rotate(-90, 12, ${pad.top + plotH / 2})`}>Stakeholder Exposure</text>
-                <text x={pad.left - 8} y={pad.top + plotH + 4} textAnchor="end" fontSize="9" fill="hsl(215 20% 45%)">Low</text>
-                <text x={pad.left - 8} y={pad.top + 10} textAnchor="end" fontSize="9" fill="hsl(215 20% 45%)">High</text>
-
-                {visiblePoints.map((point, idx) => {
-                  const cx = pad.left + (point.x / 100) * plotW;
-                  const cy = pad.top + plotH - (point.y / 100) * plotH;
-                  const color = COMPANY_COLORS[point.company];
-                  const isHl = highlightedCompany === point.company;
-                  const isSel = selectedPoint?.id === point.id;
-                  const labelLen = point.label.length * 5.5 + 16;
-                  return (
-                    <g key={point.id} className="cursor-pointer" onClick={() => setSelectedPoint(isSel ? null : point)} data-testid={`risk-point-${point.id}`}>
-                      {(isHl || isSel) && (
-                        <rect
-                          x={cx - labelLen / 2 - 2}
-                          y={cy - 12}
-                          width={labelLen + 4}
-                          height={24}
-                          rx={12}
-                          fill="none"
-                          stroke={color}
-                          strokeWidth="1"
-                          opacity="0.4"
-                          filter="url(#glow)"
-                        />
-                      )}
-                      <motion.rect
-                        x={cx - labelLen / 2}
-                        y={cy - 10}
-                        width={labelLen}
-                        height={20}
-                        rx={10}
-                        fill={color}
-                        fillOpacity={isHl || isSel ? 1 : 0.85}
-                        stroke={isSel ? '#fff' : 'none'}
-                        strokeWidth={isSel ? 1.5 : 0}
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1, fillOpacity: isHl || isSel ? 1 : highlightedCompany ? 0.25 : 0.85 }}
-                        transition={{ delay: idx * 0.04, duration: 0.4, type: 'spring', stiffness: 200 }}
-                      />
-                      <motion.text
-                        x={cx}
-                        y={cy + 3.5}
-                        textAnchor="middle"
-                        fontSize="9"
-                        fontWeight="600"
-                        fill="#fff"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: highlightedCompany && !isHl && !isSel ? 0.25 : 1 }}
-                        transition={{ delay: idx * 0.04 + 0.1 }}
-                        style={{ pointerEvents: 'none' }}
-                      >
-                        {point.label}
-                      </motion.text>
-                    </g>
-                  );
-                })}
-              </svg>
-            </div>
-
-            <div className="flex flex-wrap gap-3 justify-center mt-3">
-              {selectedCompanies.map(company => (
-                <button
-                  key={company}
-                  className="flex items-center gap-1.5 text-xs cursor-pointer transition-opacity"
-                  style={{ opacity: highlightedCompany && highlightedCompany !== company ? 0.25 : 1 }}
-                  onClick={() => dispatch({ type: 'SET_HIGHLIGHTED', company: highlightedCompany === company ? null : company })}
-                  data-testid={`risk-legend-${company.replace(/\s/g, '-')}`}
-                >
-                  <span className="w-3 h-3 rounded-full" style={{ backgroundColor: COMPANY_COLORS[company], boxShadow: `0 0 6px ${COMPANY_COLORS[company]}50` }} />
-                  <span className="text-muted-foreground">{company}</span>
-                </button>
-              ))}
-            </div>
+              {visiblePoints.map((point, idx) => {
+                const cx = pad.left + (point.x / 100) * plotW;
+                const cy = pad.top + plotH - (point.y / 100) * plotH;
+                const color = COMPANY_COLORS[point.company];
+                const isHl = highlightedCompany === point.company;
+                const isSel = selectedPoint?.id === point.id;
+                const labelLen = point.label.length * 5 + 14;
+                return (
+                  <g key={point.id} className="cursor-pointer" onClick={() => setSelectedPoint(isSel ? null : point)} data-testid={`risk-point-${point.id}`}>
+                    {(isHl || isSel) && (
+                      <rect x={cx - labelLen / 2 - 2} y={cy - 11} width={labelLen + 4} height={22} rx={11} fill="none" stroke={color} strokeWidth="1" opacity="0.4" filter="url(#glow)" />
+                    )}
+                    <motion.rect
+                      x={cx - labelLen / 2} y={cy - 9} width={labelLen} height={18} rx={9}
+                      fill={color}
+                      fillOpacity={isHl || isSel ? 1 : 0.85}
+                      stroke={isSel ? '#fff' : 'none'}
+                      strokeWidth={isSel ? 1.5 : 0}
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1, fillOpacity: isHl || isSel ? 1 : highlightedCompany ? 0.25 : 0.85 }}
+                      transition={{ delay: idx * 0.03, duration: 0.4, type: 'spring', stiffness: 200 }}
+                    />
+                    <motion.text
+                      x={cx} y={cy + 3} textAnchor="middle" fontSize="8" fontWeight="600" fill="#fff"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: highlightedCompany && !isHl && !isSel ? 0.25 : 1 }}
+                      transition={{ delay: idx * 0.03 + 0.1 }}
+                      style={{ pointerEvents: 'none' }}
+                    >
+                      {point.label}
+                    </motion.text>
+                  </g>
+                );
+              })}
+            </svg>
+          </div>
+          <div className="flex flex-wrap gap-3 justify-center mt-2">
+            {selectedCompanies.map(company => (
+              <button
+                key={company}
+                className="flex items-center gap-1.5 text-[10px] cursor-pointer transition-opacity"
+                style={{ opacity: highlightedCompany && highlightedCompany !== company ? 0.25 : 1 }}
+                onClick={() => dispatch({ type: 'SET_HIGHLIGHTED', company: highlightedCompany === company ? null : company })}
+                data-testid={`risk-legend-${company.replace(/\s/g, '-')}`}
+              >
+                <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: COMPANY_COLORS[company], boxShadow: `0 0 5px ${COMPANY_COLORS[company]}50` }} />
+                <span className="text-muted-foreground">{company}</span>
+              </button>
+            ))}
           </div>
         </div>
 
-        <AnimatePresence>
-          {selectedPoint && selectedClassification && (
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-              transition={{ duration: 0.25 }}
-              className="w-72 flex-shrink-0"
-            >
-              <div className="glass-card rounded-xl" style={{ boxShadow: `0 0 20px ${selectedClassification.color}15, inset 0 0 0 1px ${selectedClassification.color}25` }}>
-                <div className="p-3 border-b border-border/30">
-                  <div className="flex items-center justify-between gap-1">
-                    <div className="flex items-center gap-2 text-sm font-semibold">
-                      <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: COMPANY_COLORS[selectedPoint.company], boxShadow: `0 0 6px ${COMPANY_COLORS[selectedPoint.company]}60` }} />
-                      {selectedPoint.label}
+        <div className="space-y-4">
+          <AnimatePresence>
+            {selectedPoint && selectedClassification ? (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.25 }}
+              >
+                <div className="glass-card rounded-xl" style={{ boxShadow: `0 0 20px ${selectedClassification.color}15, inset 0 0 0 1px ${selectedClassification.color}25` }}>
+                  <div className="p-3 border-b border-border/30">
+                    <div className="flex items-center justify-between gap-1">
+                      <span className="text-xs font-semibold">{selectedPoint.label}</span>
+                      <Button size="icon" variant="ghost" className="w-5 h-5" onClick={() => setSelectedPoint(null)} data-testid="button-close-risk-detail"><X className="w-3 h-3" /></Button>
                     </div>
-                    <Button size="icon" variant="ghost" className="w-6 h-6" onClick={() => setSelectedPoint(null)} data-testid="button-close-risk-detail">
-                      <X className="w-3.5 h-3.5" />
-                    </Button>
-                  </div>
-                  <div className="flex items-center gap-2 mt-1.5">
-                    {(() => { const TIcon = TIER_ICONS[selectedClassification.icon]; return <TIcon className="w-3.5 h-3.5" style={{ color: selectedClassification.color }} />; })()}
-                    <Badge
-                      className="no-default-active-elevate text-[10px]"
-                      style={{ backgroundColor: selectedClassification.color + '20', color: selectedClassification.color, border: `1px solid ${selectedClassification.color}30` }}
-                    >
-                      {selectedClassification.tier}
-                    </Badge>
-                    <span className="text-[10px] text-muted-foreground">{selectedPoint.company}</span>
-                  </div>
-                </div>
-                <div className="p-3 space-y-3">
-                  <div>
-                    <p className="text-[10px] font-medium text-muted-foreground mb-1.5">Required Controls</p>
-                    <div className="flex flex-wrap gap-1">
-                      {selectedClassification.controls.map((control, i) => (
-                        <Badge
-                          key={i}
-                          variant="outline"
-                          className="text-[10px] no-default-active-elevate"
-                          style={{ borderColor: selectedClassification.color + '30', color: selectedClassification.color }}
-                        >
-                          {control}
-                        </Badge>
-                      ))}
+                    <div className="flex items-center gap-2 mt-1">
+                      {(() => { const TIcon = TIER_ICONS[selectedClassification.icon]; return <TIcon className="w-3 h-3" style={{ color: selectedClassification.color }} />; })()}
+                      <Badge className="no-default-active-elevate text-[9px]" style={{ backgroundColor: selectedClassification.color + '20', color: selectedClassification.color, border: `1px solid ${selectedClassification.color}30` }}>{selectedClassification.tier}</Badge>
+                      <span className="text-[9px] text-muted-foreground">{selectedPoint.company}</span>
                     </div>
                   </div>
-                  {selectedPoint.controls.length > 0 && (
+                  <div className="p-3 space-y-2">
+                    <p className="text-[10px] text-muted-foreground leading-relaxed">{selectedPoint.description}</p>
                     <div>
-                      <p className="text-[10px] font-medium text-muted-foreground mb-1.5">System-Specific</p>
+                      <p className="text-[9px] font-medium text-muted-foreground mb-1">Controls</p>
                       <div className="flex flex-wrap gap-1">
-                        {selectedPoint.controls.map((control, i) => (
-                          <Badge
-                            key={i}
-                            variant="outline"
-                            className="text-[10px] no-default-active-elevate border-border/50"
-                          >
-                            {control}
-                          </Badge>
+                        {selectedPoint.controls.concat(selectedClassification.controls.slice(0, 3)).map((c, i) => (
+                          <Badge key={i} variant="outline" className="text-[8px] no-default-active-elevate px-1.5 py-0" style={{ borderColor: selectedClassification.color + '30', color: selectedClassification.color }}>{c}</Badge>
                         ))}
                       </div>
                     </div>
-                  )}
+                  </div>
                 </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+              </motion.div>
+            ) : null}
+          </AnimatePresence>
+
+          <div className="glass-card rounded-xl p-4">
+            <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Risk Weight by Domain</span>
+            <div style={{ height: 200 }} className="mt-2">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={riskWeightData} layout="vertical" margin={{ left: 0, right: 8, top: 0, bottom: 0 }}>
+                  <XAxis type="number" domain={[0, 5]} tick={{ fill: 'hsl(215 20% 45%)', fontSize: 9 }} axisLine={false} tickLine={false} />
+                  <YAxis type="category" dataKey="domain" width={68} tick={{ fill: 'hsl(210 40% 75%)', fontSize: 9 }} axisLine={false} tickLine={false} />
+                  <Bar dataKey="avgWeight" radius={[0, 4, 4, 0]} animationDuration={800}>
+                    {riskWeightData.map((entry) => (
+                      <Cell key={entry.domain} fill={entry.avgWeight >= 4.5 ? 'hsl(0 84% 55%)' : entry.avgWeight >= 3.5 ? 'hsl(27 87% 55%)' : 'hsl(199 89% 48%)'} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          <div className="glass-card rounded-xl p-4">
+            <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Governance Standards</span>
+            <div className="mt-2 space-y-1 max-h-[200px] overflow-y-auto">
+              {riskDomainStandards.map(d => {
+                const DIcon = DOMAIN_ICONS[d.domain] || Shield;
+                const avgW = d.requirements.reduce((s, r) => s + r.riskWeight, 0) / d.requirements.length;
+                const barColor = avgW >= 4.5 ? 'hsl(0 84% 55%)' : avgW >= 3.5 ? 'hsl(27 87% 55%)' : 'hsl(199 89% 48%)';
+                return (
+                  <div key={d.id} className="flex items-center gap-2 p-1.5 rounded hover:bg-white/5 transition-colors" data-testid={`domain-${d.id}`}>
+                    <DIcon className="w-3 h-3 flex-shrink-0" style={{ color: barColor }} />
+                    <span className="text-[10px] flex-1 truncate">{d.domain}</span>
+                    <span className="text-[9px] font-mono text-muted-foreground">{d.requirements.length}</span>
+                    <div className="w-10 h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: 'hsl(217 20% 15%)' }}>
+                      <div className="h-full rounded-full" style={{ width: `${(avgW / 5) * 100}%`, backgroundColor: barColor }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
