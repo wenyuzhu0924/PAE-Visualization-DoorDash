@@ -4,7 +4,7 @@ import {
   ResponsiveContainer, Tooltip as RechartsTooltip,
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Cell,
 } from 'recharts';
-import { Trophy, TrendingUp, AlertTriangle, Zap, Bot, MessageSquare, Clock, Globe } from 'lucide-react';
+import { Trophy, TrendingUp, Zap, Bot, MessageSquare, Clock, Globe } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CompanyChips, DomainChips } from './ToggleChips';
 import { useDashboard } from '@/lib/DashboardContext';
@@ -83,13 +83,13 @@ export function CapabilityComparison() {
   const heroStats = [
     { icon: Bot, label: 'Daily AI Interactions', value: platformMetrics.dailyAIInteractions, suffix: '+', color: 'hsl(199 89% 48%)' },
     { icon: TrendingUp, label: 'Resolution Rate', value: platformMetrics.resolutionRate, suffix: '%', color: 'hsl(142 76% 45%)' },
-    { icon: MessageSquare, label: 'Messages / Min', value: platformMetrics.messagesPerMinute, suffix: '', color: 'hsl(27 87% 55%)' },
+    { icon: MessageSquare, label: 'Msgs / Min', value: platformMetrics.messagesPerMinute, suffix: '', color: 'hsl(27 87% 55%)' },
     { icon: Globe, label: 'Market 2032', value: platformMetrics.marketSize2032, suffix: 'B', prefix: '$', color: 'hsl(280 65% 65%)' },
   ];
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between gap-4 flex-wrap">
+    <div className="flex flex-col gap-1.5 h-full">
+      <div className="flex items-center justify-between gap-3 flex-wrap flex-shrink-0">
         <CompanyChips
           companies={COMPANIES}
           selected={selectedCompanies}
@@ -104,47 +104,47 @@ export function CapabilityComparison() {
         />
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-2" data-testid="hero-stats">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-1.5 flex-shrink-0" data-testid="hero-stats">
         {heroStats.map((stat, i) => (
           <motion.div
             key={stat.label}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.08, duration: 0.4 }}
-            className="glass-card rounded-lg p-3 relative overflow-hidden"
+            className="glass-card rounded-lg p-2 relative overflow-hidden"
             style={{ boxShadow: `0 0 20px ${stat.color}08, inset 0 0 0 1px ${stat.color}15` }}
             data-testid={`hero-stat-${i}`}
           >
-            <div className="absolute top-0 right-0 w-16 h-16 opacity-[0.04]" style={{ background: `radial-gradient(circle, ${stat.color}, transparent)` }} />
-            <div className="flex items-center gap-2 mb-1">
-              <stat.icon className="w-3.5 h-3.5" style={{ color: stat.color }} />
-              <span className="text-[10px] text-muted-foreground uppercase tracking-wider">{stat.label}</span>
+            <div className="absolute top-0 right-0 w-12 h-12 opacity-[0.04]" style={{ background: `radial-gradient(circle, ${stat.color}, transparent)` }} />
+            <div className="flex items-center gap-1.5 mb-0.5">
+              <stat.icon className="w-3 h-3" style={{ color: stat.color }} />
+              <span className="text-[9px] text-muted-foreground uppercase tracking-wider">{stat.label}</span>
             </div>
-            <p className="text-2xl font-bold leading-none" style={{ color: stat.color }}>
+            <p className="text-lg font-bold leading-none" style={{ color: stat.color }}>
               <AnimatedNumber value={stat.value} suffix={stat.suffix} prefix={stat.prefix} />
             </p>
           </motion.div>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2 glass-card rounded-xl p-4 glow-border-blue">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Capability Radar</span>
-            <span className="text-[10px] text-muted-foreground font-mono">{selectedCompanies.length} companies / {selectedDomains.length} domains</span>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 flex-1 min-h-0">
+        <div className="lg:col-span-2 glass-card rounded-xl p-3 glow-border-blue flex flex-col">
+          <div className="flex items-center justify-between mb-1 flex-shrink-0">
+            <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Capability Radar</span>
+            <span className="text-[9px] text-muted-foreground font-mono">{selectedCompanies.length} companies / {selectedDomains.length} domains</span>
           </div>
-          <div className="w-full" style={{ height: 340 }}>
+          <div className="w-full flex-1 min-h-0">
             <ResponsiveContainer width="100%" height="100%">
               <RadarChart data={radarData} cx="50%" cy="50%" outerRadius="72%">
                 <PolarGrid strokeDasharray="3 3" stroke="hsl(217 20% 20%)" />
                 <PolarAngleAxis
                   dataKey="domain"
-                  tick={{ fill: 'hsl(210 40% 80%)', fontSize: 11, fontWeight: 500 }}
+                  tick={{ fill: 'hsl(210 40% 80%)', fontSize: 10, fontWeight: 500 }}
                 />
                 <PolarRadiusAxis
                   domain={[0, 5]}
                   tickCount={6}
-                  tick={{ fill: 'hsl(215 20% 40%)', fontSize: 10 }}
+                  tick={{ fill: 'hsl(215 20% 40%)', fontSize: 9 }}
                   axisLine={false}
                 />
                 {selectedCompanies.map(company => (
@@ -165,46 +165,46 @@ export function CapabilityComparison() {
                     backgroundColor: 'hsl(222 22% 11%)',
                     border: '1px solid hsl(217 20% 20%)',
                     borderRadius: 8,
-                    fontSize: 12,
+                    fontSize: 11,
                     color: 'hsl(210 40% 90%)',
                   }}
                 />
               </RadarChart>
             </ResponsiveContainer>
           </div>
-          <div className="flex flex-wrap gap-3 justify-center mt-1">
+          <div className="flex flex-wrap gap-2.5 justify-center flex-shrink-0">
             {selectedCompanies.map(company => (
               <button
                 key={company}
-                className="flex items-center gap-1.5 text-xs cursor-pointer transition-opacity"
+                className="flex items-center gap-1 text-[10px] cursor-pointer transition-opacity"
                 style={{ opacity: highlightedCompany && highlightedCompany !== company ? 0.3 : 1 }}
                 onClick={() => dispatch({ type: 'SET_HIGHLIGHTED', company: highlightedCompany === company ? null : company })}
                 data-testid={`legend-${company.replace(/\s/g, '-')}`}
               >
-                <span className="w-3 h-3 rounded-sm" style={{ backgroundColor: COMPANY_COLORS[company], boxShadow: `0 0 6px ${COMPANY_COLORS[company]}60` }} />
+                <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: COMPANY_COLORS[company], boxShadow: `0 0 6px ${COMPANY_COLORS[company]}60` }} />
                 <span className="text-muted-foreground">{company}</span>
               </button>
             ))}
           </div>
         </div>
 
-        <div className="space-y-4">
-          <div className="glass-card rounded-xl p-4">
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Rankings</span>
-            <div className="mt-3 space-y-2">
+        <div className="flex flex-col gap-1.5 min-h-0">
+          <div className="glass-card rounded-xl p-2.5 flex-shrink-0">
+            <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Rankings</span>
+            <div className="mt-1.5 space-y-1">
               {companyAvgs.map((c, i) => (
                 <motion.div
                   key={c.fullName}
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: i * 0.06 }}
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-1.5"
                   data-testid={`ranking-${i}`}
                 >
-                  <span className="text-[10px] font-mono text-muted-foreground w-4">#{i + 1}</span>
-                  <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: c.color }} />
-                  <span className="text-xs flex-1 truncate">{c.company}</span>
-                  <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: 'hsl(217 20% 15%)' }}>
+                  <span className="text-[9px] font-mono text-muted-foreground w-4">#{i + 1}</span>
+                  <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: c.color }} />
+                  <span className="text-[10px] flex-1 truncate">{c.company}</span>
+                  <div className="flex-1 h-1 rounded-full overflow-hidden" style={{ backgroundColor: 'hsl(217 20% 15%)' }}>
                     <motion.div
                       className="h-full rounded-full"
                       style={{ backgroundColor: c.color, boxShadow: `0 0 4px ${c.color}60` }}
@@ -213,20 +213,20 @@ export function CapabilityComparison() {
                       transition={{ duration: 0.6, delay: i * 0.08 }}
                     />
                   </div>
-                  <span className="text-xs font-bold font-mono w-8 text-right" style={{ color: c.color }}>{c.avg.toFixed(1)}</span>
+                  <span className="text-[10px] font-bold font-mono w-7 text-right" style={{ color: c.color }}>{c.avg.toFixed(1)}</span>
                 </motion.div>
               ))}
             </div>
           </div>
 
-          <div className="glass-card rounded-xl p-4">
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Autonomy Distribution</span>
-            <div className="mt-3" style={{ height: 120 }}>
+          <div className="glass-card rounded-xl p-2.5 flex-1 min-h-0 flex flex-col">
+            <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider flex-shrink-0">Autonomy Distribution</span>
+            <div className="mt-1 flex-1 min-h-0">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={autonomyDist} layout="vertical" margin={{ left: 0, right: 10, top: 0, bottom: 0 }}>
+                <BarChart data={autonomyDist} layout="vertical" margin={{ left: 0, right: 8, top: 0, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(217 20% 15%)" horizontal={false} />
-                  <XAxis type="number" tick={{ fill: 'hsl(215 20% 45%)', fontSize: 10 }} axisLine={false} tickLine={false} />
-                  <YAxis type="category" dataKey="tier" tick={{ fill: 'hsl(210 40% 80%)', fontSize: 10 }} width={75} axisLine={false} tickLine={false} />
+                  <XAxis type="number" tick={{ fill: 'hsl(215 20% 45%)', fontSize: 9 }} axisLine={false} tickLine={false} />
+                  <YAxis type="category" dataKey="tier" tick={{ fill: 'hsl(210 40% 80%)', fontSize: 9 }} width={70} axisLine={false} tickLine={false} />
                   <Bar dataKey="count" radius={[0, 4, 4, 0]} animationDuration={800}>
                     {autonomyDist.map((entry) => (
                       <Cell
@@ -240,54 +240,54 @@ export function CapabilityComparison() {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-2">
-            <div className="glass-card rounded-lg p-2.5 text-center" data-testid="stat-leader">
-              <Trophy className="w-3.5 h-3.5 mx-auto mb-1" style={{ color: leader?.color }} />
-              <p className="text-xs font-bold truncate" style={{ color: leader?.color }}>{leader?.company}</p>
-              <p className="text-[9px] text-muted-foreground">Leader</p>
+          <div className="grid grid-cols-3 gap-1.5 flex-shrink-0">
+            <div className="glass-card rounded-lg p-2 text-center" data-testid="stat-leader">
+              <Trophy className="w-3 h-3 mx-auto mb-0.5" style={{ color: leader?.color }} />
+              <p className="text-[10px] font-bold truncate" style={{ color: leader?.color }}>{leader?.company}</p>
+              <p className="text-[8px] text-muted-foreground">Leader</p>
             </div>
-            <div className="glass-card rounded-lg p-2.5 text-center" data-testid="stat-systems">
-              <Zap className="w-3.5 h-3.5 mx-auto mb-1 text-primary" />
-              <p className="text-xs font-bold text-primary">{totalSystems}</p>
-              <p className="text-[9px] text-muted-foreground">Systems</p>
+            <div className="glass-card rounded-lg p-2 text-center" data-testid="stat-systems">
+              <Zap className="w-3 h-3 mx-auto mb-0.5 text-primary" />
+              <p className="text-[10px] font-bold text-primary">{totalSystems}</p>
+              <p className="text-[8px] text-muted-foreground">Systems</p>
             </div>
-            <div className="glass-card rounded-lg p-2.5 text-center" data-testid="stat-latency">
-              <Clock className="w-3.5 h-3.5 mx-auto mb-1 text-green-400" />
-              <p className="text-xs font-bold text-green-400">{platformMetrics.avgLatency}s</p>
-              <p className="text-[9px] text-muted-foreground">Latency</p>
+            <div className="glass-card rounded-lg p-2 text-center" data-testid="stat-latency">
+              <Clock className="w-3 h-3 mx-auto mb-0.5 text-green-400" />
+              <p className="text-[10px] font-bold text-green-400">{platformMetrics.avgLatency}s</p>
+              <p className="text-[8px] text-muted-foreground">Latency</p>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="glass-card rounded-xl p-4">
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Score Heatmap</span>
-          <div className="flex items-center gap-1">
-            <span className="text-[10px] text-muted-foreground mr-1">Low</span>
+      <div className="glass-card rounded-xl p-2.5 flex-shrink-0">
+        <div className="flex items-center justify-between mb-1">
+          <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Score Heatmap</span>
+          <div className="flex items-center gap-0.5">
+            <span className="text-[9px] text-muted-foreground mr-1">Low</span>
             {[1, 2, 3, 4, 5].map(s => (
               <div
                 key={s}
-                className="w-5 h-3.5 rounded-sm flex items-center justify-center text-[9px]"
+                className="w-4 h-3 rounded-sm flex items-center justify-center text-[8px]"
                 style={{ backgroundColor: getScoreColor(s), color: s >= 3 ? '#fff' : 'hsl(210 40% 70%)' }}
               >
                 {s}
               </div>
             ))}
-            <span className="text-[10px] text-muted-foreground ml-1">High</span>
+            <span className="text-[9px] text-muted-foreground ml-1">High</span>
           </div>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm" data-testid="heatmap-table">
             <thead>
               <tr>
-                <th className="text-left py-2 pr-3 font-medium text-muted-foreground text-xs"></th>
+                <th className="text-left py-0.5 pr-2 font-medium text-muted-foreground text-[10px]"></th>
                 {selectedDomains.map(domain => (
-                  <th key={domain} className="text-center py-2 px-2 font-medium text-xs text-muted-foreground" style={{ minWidth: 70 }}>
+                  <th key={domain} className="text-center py-0.5 px-1 font-medium text-[10px] text-muted-foreground" style={{ minWidth: 56 }}>
                     {domain.replace(' AI', '').replace('Autonomous ', '')}
                   </th>
                 ))}
-                <th className="text-center py-2 px-2 font-medium text-xs text-muted-foreground">Avg</th>
+                <th className="text-center py-0.5 px-1 font-medium text-[10px] text-muted-foreground">Avg</th>
               </tr>
             </thead>
             <tbody>
@@ -307,20 +307,20 @@ export function CapabilityComparison() {
                       onClick={() => dispatch({ type: 'SET_HIGHLIGHTED', company: isHighlighted ? null : company })}
                       data-testid={`heatmap-row-${company.replace(/\s/g, '-')}`}
                     >
-                      <td className="py-1.5 pr-3 font-medium text-xs">
-                        <span className="flex items-center gap-1.5">
-                          <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: COMPANY_COLORS[company] }} />
+                      <td className="py-0.5 pr-2 font-medium text-[10px]">
+                        <span className="flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: COMPANY_COLORS[company] }} />
                           <span className="text-muted-foreground">{company}</span>
                         </span>
                       </td>
                       {selectedDomains.map(domain => {
                         const score = capabilityScores[company][domain];
                         return (
-                          <td key={domain} className="text-center py-1.5 px-1">
+                          <td key={domain} className="text-center py-0.5 px-0.5">
                             <motion.div
-                              className="mx-auto rounded-md flex items-center justify-center font-bold text-xs"
+                              className="mx-auto rounded flex items-center justify-center font-bold text-[10px]"
                               style={{
-                                width: 36, height: 28,
+                                width: 28, height: 22,
                                 backgroundColor: getScoreColor(score),
                                 color: score >= 3 ? '#fff' : 'hsl(210 40% 70%)',
                                 boxShadow: score >= 4 ? `0 0 8px ${getScoreColor(score)}40` : 'none',
@@ -334,11 +334,11 @@ export function CapabilityComparison() {
                           </td>
                         );
                       })}
-                      <td className="text-center py-1.5 px-1">
+                      <td className="text-center py-0.5 px-0.5">
                         <div
-                          className="mx-auto rounded-md flex items-center justify-center font-bold text-xs"
+                          className="mx-auto rounded flex items-center justify-center font-bold text-[10px]"
                           style={{
-                            width: 36, height: 28,
+                            width: 28, height: 22,
                             border: `1px dashed ${COMPANY_COLORS[company]}50`,
                             color: COMPANY_COLORS[company],
                           }}

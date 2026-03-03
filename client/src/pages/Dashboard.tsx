@@ -31,6 +31,7 @@ function StepContent({ step }: { step: number }) {
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -12 }}
         transition={{ duration: 0.3 }}
+        className="h-full"
       >
         {step === 0 && <CapabilityComparison />}
         {step === 1 && <CompetitorTechMap />}
@@ -87,8 +88,8 @@ function DashboardInner() {
             </Button>
           </div>
         </div>
-        <div className="flex-1 overflow-auto p-6 tech-grid-bg">
-          <div className="max-w-7xl mx-auto">
+        <div className="flex-1 min-h-0 p-6 tech-grid-bg flex flex-col">
+          <div className="max-w-7xl mx-auto w-full flex-1 min-h-0">
             <StepContent step={currentStep} />
           </div>
         </div>
@@ -228,12 +229,12 @@ function DashboardInner() {
         </Sidebar>
 
         <div className="flex flex-col flex-1 min-w-0">
-          <header className="flex items-center justify-between gap-2 px-5 py-3 border-b border-border/50 bg-background/80 backdrop-blur-sm">
-            <div className="flex items-center gap-3">
+          <header className="flex items-center justify-between gap-2 px-4 py-1.5 border-b border-border/50 bg-background/80 backdrop-blur-sm">
+            <div className="flex items-center gap-2">
               <SidebarTrigger data-testid="button-sidebar-toggle" />
               <div>
-                <h1 className="text-base font-bold tracking-tight leading-tight gradient-text">Agentic AI Governance Framework</h1>
-                <p className="text-[11px] text-muted-foreground/60">Harvard Kennedy School</p>
+                <h1 className="text-sm font-bold tracking-tight leading-tight gradient-text">Agentic AI Governance Framework</h1>
+                <p className="text-[10px] text-muted-foreground/60">Harvard Kennedy School</p>
               </div>
             </div>
             <Button
@@ -249,22 +250,24 @@ function DashboardInner() {
           </header>
           <div className="accent-line" />
 
-          <main className="flex-1 overflow-auto tech-grid-bg">
-            <div className="max-w-7xl mx-auto p-6">
-              <div className="mb-5 flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center glow-border-blue" style={{ backgroundColor: 'hsl(199 89% 48% / 0.1)' }}>
-                  {(() => { const Icon = STEP_ICONS[currentStep]; return <Icon className="w-4 h-4 text-primary" />; })()}
+          <main className="flex-1 overflow-hidden tech-grid-bg flex flex-col">
+            <div className="max-w-7xl mx-auto px-4 pt-2 pb-1 flex-1 w-full flex flex-col min-h-0">
+              <div className="mb-1.5 flex items-center gap-2 flex-shrink-0">
+                <div className="w-6 h-6 rounded-md flex items-center justify-center glow-border-blue" style={{ backgroundColor: 'hsl(199 89% 48% / 0.1)' }}>
+                  {(() => { const Icon = STEP_ICONS[currentStep]; return <Icon className="w-3.5 h-3.5 text-primary" />; })()}
                 </div>
                 <div>
-                  <h2 className="text-lg font-bold">{STEPS[currentStep].title}</h2>
-                  <p className="text-xs text-muted-foreground/70">{STEPS[currentStep].subtitle}</p>
+                  <h2 className="text-sm font-bold leading-tight">{STEPS[currentStep].title}</h2>
+                  <p className="text-[10px] text-muted-foreground/70">{STEPS[currentStep].subtitle}</p>
                 </div>
               </div>
 
-              <StepContent step={currentStep} />
+              <div className="flex-1 min-h-0">
+                <StepContent step={currentStep} />
+              </div>
 
               {mode === 'story' && (
-                <div className="flex items-center justify-between mt-6 pt-4 border-t border-border/30">
+                <div className="flex items-center justify-between mt-1.5 pt-1.5 border-t border-border/30 flex-shrink-0">
                   <Button
                     variant="outline"
                     size="sm"
