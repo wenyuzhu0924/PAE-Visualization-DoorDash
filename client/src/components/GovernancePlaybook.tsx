@@ -19,6 +19,14 @@ import {
 } from '@/lib/data';
 
 const STAGE_ICONS = [Search, FileText, Workflow, FlaskConical, Rocket, TrendingUp];
+const STAGE_COLORS = [
+  'hsl(199 89% 48%)',
+  'hsl(280 65% 60%)',
+  'hsl(27 87% 55%)',
+  'hsl(0 84% 55%)',
+  'hsl(142 76% 45%)',
+  'hsl(45 90% 50%)',
+];
 const SWIMLANE_ICONS: Record<string, typeof Eye> = {
   Monitoring: Eye,
   Compliance: ListChecks,
@@ -127,6 +135,7 @@ export function GovernancePlaybook() {
             const gateAfter = i < gates.length ? gates[i] : null;
             const progress = controls.length > 0 ? (stageCompleted / controls.length) * 100 : 0;
             const StageIcon = STAGE_ICONS[i];
+            const stageColor = STAGE_COLORS[i];
 
             return (
               <div key={stage.id} className="flex items-stretch flex-shrink-0">
@@ -139,21 +148,36 @@ export function GovernancePlaybook() {
                   transition={{ delay: i * 0.06 }}
                   data-testid={`stage-card-${stage.id}`}
                 >
-                  <div className="h-0.5" style={{ background: `${intensityColor}80` }} />
+                  <div className="h-0.5" style={{ background: `${stageColor}` }} />
                   <div className="p-2">
-                    <div className="flex items-center justify-between mb-0.5">
-                      <div className="flex items-center gap-1">
-                        <StageIcon className="w-3 h-3" style={{ color: intensityColor }} />
-                        <span className="text-[8px] font-mono text-primary/60">S{stage.id}</span>
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <div className="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0" style={{ backgroundColor: stageColor + '18', boxShadow: `0 0 8px ${stageColor}20` }}>
+                        <StageIcon className="w-3.5 h-3.5" style={{ color: stageColor }} />
                       </div>
-                      {readiness && (readiness.passed ? <CheckCircle2 className="w-2.5 h-2.5 text-green-400" /> : <XCircle className="w-2.5 h-2.5 text-red-400" />)}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[8px] font-mono" style={{ color: stageColor }}>S{stage.id}</span>
+                          {readiness && (readiness.passed ? <CheckCircle2 className="w-2.5 h-2.5 text-green-400" /> : <XCircle className="w-2.5 h-2.5 text-red-400" />)}
+                        </div>
+                        <p className="text-[10px] font-semibold leading-tight truncate">{stage.shortTitle}</p>
+                      </div>
                     </div>
-                    <p className="text-[10px] font-semibold leading-tight mb-1">{stage.shortTitle}</p>
                     <div className="space-y-0.5">
-                      <div className="h-1 rounded-full overflow-hidden" style={{ backgroundColor: 'hsl(217 20% 15%)' }}>
-                        <motion.div className="h-full rounded-full" style={{ backgroundColor: intensityColor, boxShadow: `0 0 4px ${intensityColor}60` }} initial={{ width: 0 }} animate={{ width: `${progress}%` }} transition={{ duration: 0.5, delay: i * 0.06 }} />
+                      <div className="h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: 'hsl(217 20% 15%)' }}>
+                        <motion.div
+                          className="h-full rounded-full"
+                          style={{ backgroundColor: stageColor, boxShadow: `0 0 6px ${stageColor}60` }}
+                          initial={{ width: 0 }}
+                          animate={{ width: `${progress}%` }}
+                          transition={{ duration: 0.6, delay: i * 0.06 }}
+                        />
                       </div>
-                      <span className="text-[7px] text-muted-foreground">{stageCompleted}/{controls.length}</span>
+                      <div className="flex items-center justify-between">
+                        <span className="text-[7px] text-muted-foreground/60">controls</span>
+                        <span className="text-[8px] font-mono font-semibold" style={{ color: stageCompleted === controls.length && controls.length > 0 ? 'hsl(142 76% 45%)' : stageColor }}>
+                          {stageCompleted}/{controls.length}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </motion.div>
@@ -189,8 +213,10 @@ export function GovernancePlaybook() {
                   <div className="p-2 border-b border-border/30">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1.5 text-xs font-semibold">
-                        {(() => { const SI = STAGE_ICONS[selectedStage.id - 1]; return <SI className="w-3.5 h-3.5" style={{ color: intensityColor }} />; })()}
-                        <span className="font-mono text-[10px] text-primary/60">S{selectedStage.id}</span>
+                        <div className="w-5 h-5 rounded-md flex items-center justify-center" style={{ backgroundColor: STAGE_COLORS[selectedStage.id - 1] + '18' }}>
+                          {(() => { const SI = STAGE_ICONS[selectedStage.id - 1]; return <SI className="w-3 h-3" style={{ color: STAGE_COLORS[selectedStage.id - 1] }} />; })()}
+                        </div>
+                        <span className="font-mono text-[10px]" style={{ color: STAGE_COLORS[selectedStage.id - 1] }}>S{selectedStage.id}</span>
                         {selectedStage.title}
                       </div>
                       <Button size="icon" variant="ghost" className="w-5 h-5" onClick={() => setSelectedStage(null)} data-testid="button-close-stage"><X className="w-3 h-3" /></Button>
@@ -199,7 +225,7 @@ export function GovernancePlaybook() {
                   <div className="p-2 grid grid-cols-1 md:grid-cols-2 gap-2">
                     <div>
                       <div className="flex items-center justify-between mb-1">
-                        <p className="text-[9px] font-medium text-muted-foreground flex items-center gap-0.5"><ShieldCheck className="w-2.5 h-2.5" style={{ color: intensityColor }} />Controls</p>
+                        <p className="text-[9px] font-medium text-muted-foreground flex items-center gap-0.5"><ShieldCheck className="w-2.5 h-2.5" style={{ color: STAGE_COLORS[selectedStage.id - 1] }} />Controls</p>
                         <Button variant="ghost" size="sm" className="h-4 text-[8px] px-1 text-primary" onClick={() => { const controls = selectedStage.mandatoryControls[controlKey] || []; const next = new Set(completedControls); controls.forEach(c => next.add(`${selectedStage.id}-${c}`)); setCompletedControls(next); }} data-testid="button-auto-populate">
                           <Sparkles className="w-2 h-2 mr-0.5" />Mark all
                         </Button>
@@ -209,10 +235,18 @@ export function GovernancePlaybook() {
                           const controlId = `${selectedStage.id}-${control}`;
                           const isDone = completedControls.has(controlId);
                           return (
-                            <div key={i} className="flex items-center gap-1 text-[10px] p-0.5 rounded cursor-pointer transition-colors hover:bg-white/5" onClick={() => { const next = new Set(completedControls); if (isDone) next.delete(controlId); else next.add(controlId); setCompletedControls(next); }} data-testid={`control-check-${selectedStage.id}-${i}`}>
-                              {isDone ? <CheckCircle2 className="w-2.5 h-2.5 flex-shrink-0 text-green-400" /> : <div className="w-2.5 h-2.5 rounded-full border flex-shrink-0" style={{ borderColor: intensityColor + '60' }} />}
+                            <motion.div
+                              key={i}
+                              className="flex items-center gap-1 text-[10px] p-0.5 rounded cursor-pointer transition-colors hover:bg-white/5"
+                              onClick={() => { const next = new Set(completedControls); if (isDone) next.delete(controlId); else next.add(controlId); setCompletedControls(next); }}
+                              initial={{ opacity: 0, x: -10 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: i * 0.05 }}
+                              data-testid={`control-check-${selectedStage.id}-${i}`}
+                            >
+                              {isDone ? <CheckCircle2 className="w-2.5 h-2.5 flex-shrink-0 text-green-400" /> : <div className="w-2.5 h-2.5 rounded-full border flex-shrink-0" style={{ borderColor: STAGE_COLORS[selectedStage.id - 1] + '60' }} />}
                               <span className={isDone ? 'line-through opacity-40' : 'text-muted-foreground'}>{control}</span>
-                            </div>
+                            </motion.div>
                           );
                         })}
                       </div>
@@ -300,7 +334,7 @@ export function GovernancePlaybook() {
                   </div>
                   <div className="flex gap-px">
                     {lane.stages.map((content, i) => (
-                      <div key={i} className="flex-1 h-2 rounded-sm transition-colors" style={{ backgroundColor: content ? intensityColor + '35' : 'hsl(217 20% 12%)', boxShadow: content ? `0 0 4px ${intensityColor}25` : 'none' }} title={content || `Stage ${i + 1}: inactive`} />
+                      <div key={i} className="flex-1 h-2 rounded-sm transition-colors" style={{ backgroundColor: content ? STAGE_COLORS[i] + '35' : 'hsl(217 20% 12%)', boxShadow: content ? `0 0 4px ${STAGE_COLORS[i]}25` : 'none' }} title={content || `Stage ${i + 1}: inactive`} />
                     ))}
                   </div>
                   <p className="text-[7px] text-muted-foreground/60 mt-0.5">{lane.subtitle}</p>
@@ -313,7 +347,7 @@ export function GovernancePlaybook() {
             <div className="flex-1 min-h-0 glass-card rounded-xl p-3 flex items-center justify-center">
               <div className="text-center">
                 <ShieldCheck className="w-6 h-6 mx-auto mb-1.5" style={{ color: intensityColor, opacity: 0.4 }} />
-                <p className="text-[10px] text-muted-foreground/50">Select a stage or gate above</p>
+                <p className="text-[10px] text-muted-foreground/50">Select a stage or gate above to see details</p>
               </div>
             </div>
           )}

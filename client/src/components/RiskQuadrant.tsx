@@ -3,7 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import {
-  BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell,
+  BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell, Tooltip as RechartsTooltip,
 } from 'recharts';
 import { X, ShieldAlert, ShieldCheck, Activity, Shield, Layers, Scale, FileWarning, Gavel } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -46,6 +46,17 @@ const TIER_ICONS = {
   elevated: ShieldAlert,
   operational: Activity,
   standard: ShieldCheck,
+};
+
+const DOMAIN_COLORS: Record<string, string> = {
+  Brand: 'hsl(280 65% 60%)',
+  Communications: 'hsl(199 89% 48%)',
+  'Public Policy': 'hsl(0 84% 55%)',
+  Legal: 'hsl(340 75% 55%)',
+  Insurance: 'hsl(27 87% 55%)',
+  'Trust & Safety': 'hsl(350 80% 60%)',
+  'Values Alignment': 'hsl(142 76% 45%)',
+  Regulatory: 'hsl(45 90% 50%)',
 };
 
 const DOMAIN_ICONS: Record<string, typeof Shield> = {
@@ -95,9 +106,10 @@ export function RiskQuadrant() {
     return riskDomainStandards.map(d => ({
       domain: d.domain.length > 12 ? d.domain.slice(0, 10) + '..' : d.domain,
       fullDomain: d.domain,
-      avgWeight: d.requirements.reduce((s, r) => s + r.riskWeight, 0) / d.requirements.length,
+      avgWeight: parseFloat((d.requirements.reduce((s, r) => s + r.riskWeight, 0) / d.requirements.length).toFixed(1)),
       maxWeight: Math.max(...d.requirements.map(r => r.riskWeight)),
       count: d.requirements.length,
+      color: DOMAIN_COLORS[d.domain] || 'hsl(199 89% 48%)',
     }));
   }, []);
 
@@ -286,37 +298,60 @@ export function RiskQuadrant() {
           </AnimatePresence>
 
           <div className="glass-card rounded-xl p-2.5 flex-1 min-h-0 flex flex-col">
-            <span className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider flex-shrink-0">Risk Weight by Domain</span>
-            <div className="flex-1 min-h-0 mt-1">
+            <div className="flex items-center justify-between flex-shrink-0 mb-1">
+              <span className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider">Avg Risk Weight by Domain</span>
+              <span className="text-[8px] text-muted-foreground font-mono">scale 0-5</span>
+            </div>
+            <div className="flex-1 min-h-0">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={riskWeightData} layout="vertical" margin={{ left: 0, right: 6, top: 0, bottom: 0 }}>
+                <BarChart data={riskWeightData} layout="vertical" margin={{ left: 0, right: 8, top: 0, bottom: 0 }}>
                   <XAxis type="number" domain={[0, 5]} tick={{ fill: 'hsl(215 20% 45%)', fontSize: 8 }} axisLine={false} tickLine={false} />
                   <YAxis type="category" dataKey="domain" width={62} tick={{ fill: 'hsl(210 40% 75%)', fontSize: 8 }} axisLine={false} tickLine={false} />
+                  <RechartsTooltip
+                    contentStyle={{ backgroundColor: 'hsl(222 22% 11%)', border: '1px solid hsl(217 20% 20%)', borderRadius: 8, fontSize: 10, color: 'hsl(210 40% 90%)' }}
+                    formatter={(value: number) => [`${value} / 5`, 'Avg Risk Weight']}
+                    labelFormatter={(label) => {
+                      const item = riskWeightData.find(d => d.domain === label);
+                      return item ? item.fullDomain : label;
+                    }}
+                  />
                   <Bar dataKey="avgWeight" radius={[0, 4, 4, 0]} animationDuration={800}>
                     {riskWeightData.map((entry) => (
-                      <Cell key={entry.domain} fill={entry.avgWeight >= 4.5 ? 'hsl(0 84% 55%)' : entry.avgWeight >= 3.5 ? 'hsl(27 87% 55%)' : 'hsl(199 89% 48%)'} />
+                      <Cell key={entry.domain} fill={entry.color} />
                     ))}
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
             </div>
+            <div className="flex flex-wrap gap-x-2.5 gap-y-0.5 mt-1 flex-shrink-0">
+              {riskWeightData.map(d => (
+                <span key={d.domain} className="flex items-center gap-0.5 text-[7px] text-muted-foreground/70">
+                  <span className="w-1.5 h-1.5 rounded-sm flex-shrink-0" style={{ backgroundColor: d.color }} />
+                  {d.domain}
+                </span>
+              ))}
+            </div>
           </div>
 
           <div className="glass-card rounded-xl p-2.5 flex-shrink-0">
-            <span className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider">Governance Standards</span>
-            <div className="mt-1 space-y-0.5 max-h-[140px] overflow-y-auto">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider">Governance Standards</span>
+              <span className="text-[8px] text-muted-foreground font-mono">{riskDomainStandards.reduce((s, d) => s + d.requirements.length, 0)} requirements</span>
+            </div>
+            <div className="space-y-0.5 max-h-[140px] overflow-y-auto">
               {riskDomainStandards.map(d => {
                 const DIcon = DOMAIN_ICONS[d.domain] || Shield;
+                const domainColor = DOMAIN_COLORS[d.domain] || 'hsl(199 89% 48%)';
                 const avgW = d.requirements.reduce((s, r) => s + r.riskWeight, 0) / d.requirements.length;
-                const barColor = avgW >= 4.5 ? 'hsl(0 84% 55%)' : avgW >= 3.5 ? 'hsl(27 87% 55%)' : 'hsl(199 89% 48%)';
                 return (
                   <div key={d.id} className="flex items-center gap-1.5 p-1 rounded hover:bg-white/5 transition-colors" data-testid={`domain-${d.id}`}>
-                    <DIcon className="w-2.5 h-2.5 flex-shrink-0" style={{ color: barColor }} />
+                    <DIcon className="w-2.5 h-2.5 flex-shrink-0" style={{ color: domainColor }} />
                     <span className="text-[9px] flex-1 truncate">{d.domain}</span>
-                    <span className="text-[8px] font-mono text-muted-foreground">{d.requirements.length}</span>
-                    <div className="w-8 h-1 rounded-full overflow-hidden" style={{ backgroundColor: 'hsl(217 20% 15%)' }}>
-                      <div className="h-full rounded-full" style={{ width: `${(avgW / 5) * 100}%`, backgroundColor: barColor }} />
+                    <span className="text-[8px] font-mono" style={{ color: domainColor }}>{d.requirements.length}</span>
+                    <div className="w-10 h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: 'hsl(217 20% 15%)' }}>
+                      <div className="h-full rounded-full" style={{ width: `${(avgW / 5) * 100}%`, backgroundColor: domainColor, boxShadow: `0 0 3px ${domainColor}50` }} />
                     </div>
+                    <span className="text-[7px] font-mono text-muted-foreground w-4 text-right">{avgW.toFixed(1)}</span>
                   </div>
                 );
               })}
