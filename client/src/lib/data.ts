@@ -412,47 +412,6 @@ export const controlSwimlanes = [
   },
 ];
 
-export function getAutoInsights(selectedCompanies: Company[], selectedDomains: Domain[]): string[] {
-  const insights: string[] = [];
-  if (selectedCompanies.length === 0 || selectedDomains.length === 0) return ['Select companies and domains to see insights.'];
-
-  const scores = selectedCompanies.map(c => ({
-    company: c,
-    avg: selectedDomains.reduce((sum, d) => sum + capabilityScores[c][d], 0) / selectedDomains.length,
-    max: Math.max(...selectedDomains.map(d => capabilityScores[c][d])),
-    maxDomain: selectedDomains.reduce((best, d) => capabilityScores[c][d] > capabilityScores[c][best] ? d : best, selectedDomains[0]),
-  }));
-
-  const leader = scores.reduce((a, b) => a.avg > b.avg ? a : b);
-  insights.push(`${leader.company} leads overall with an average capability score of ${leader.avg.toFixed(1)}/5 across selected domains.`);
-
-  const laggard = scores.reduce((a, b) => a.avg < b.avg ? a : b);
-  if (laggard.company !== leader.company) {
-    insights.push(`${laggard.company} trails with ${laggard.avg.toFixed(1)}/5, presenting the largest capability gap (${(leader.avg - laggard.avg).toFixed(1)} points).`);
-  }
-
-  for (const domain of selectedDomains) {
-    const domainLeader = selectedCompanies.reduce((a, b) => capabilityScores[a][domain] > capabilityScores[b][domain] ? a : b);
-    const score = capabilityScores[domainLeader][domain];
-    if (score >= 5) {
-      insights.push(`${domainLeader} dominates ${domain} at level 5 -- this represents the highest governance exposure requiring comprehensive controls.`);
-    }
-  }
-
-  if (selectedDomains.includes('Dispatch AI') && selectedDomains.includes('Support AI')) {
-    insights.push('Dispatch + Support AI together create compound governance risk: failures in one cascade to the other, requiring coordinated oversight.');
-  }
-
-  if (selectedCompanies.includes('DoorDash')) {
-    const ddAvg = selectedDomains.reduce((sum, d) => sum + capabilityScores.DoorDash[d], 0) / selectedDomains.length;
-    if (ddAvg >= 4.5) {
-      insights.push('DoorDash operates at maximum capability across these domains, underscoring the urgency of the governance playbook proposed in this analysis.');
-    }
-  }
-
-  return insights.slice(0, 5);
-}
-
 export const STEPS = [
   { id: 0, title: 'Capability Comparison', subtitle: 'AI Strategic Profile & Maturity', icon: 'radar' },
   { id: 1, title: 'Technology Map', subtitle: 'Competitor Tech Stack Matrix', icon: 'grid' },

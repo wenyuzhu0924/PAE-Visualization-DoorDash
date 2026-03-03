@@ -8,7 +8,6 @@ interface DashboardState {
   highlightedCompany: Company | null;
   mode: 'story' | 'explore';
   presentationMode: boolean;
-  notationVisible: boolean;
   autonomyTier: 'Assistive' | 'Conditional' | 'Autonomous';
   exposureLevel: 'Low' | 'High';
 }
@@ -20,7 +19,6 @@ type Action =
   | { type: 'SET_HIGHLIGHTED'; company: Company | null }
   | { type: 'SET_MODE'; mode: 'story' | 'explore' }
   | { type: 'TOGGLE_PRESENTATION' }
-  | { type: 'TOGGLE_NOTATION' }
   | { type: 'SET_AUTONOMY_TIER'; tier: 'Assistive' | 'Conditional' | 'Autonomous' }
   | { type: 'SET_EXPOSURE'; level: 'Low' | 'High' }
   | { type: 'NEXT_STEP' }
@@ -33,7 +31,6 @@ const defaultState: DashboardState = {
   highlightedCompany: null,
   mode: 'story',
   presentationMode: false,
-  notationVisible: true,
   autonomyTier: 'Autonomous',
   exposureLevel: 'High',
 };
@@ -79,8 +76,6 @@ function reducer(state: DashboardState, action: Action): DashboardState {
       return { ...state, mode: action.mode };
     case 'TOGGLE_PRESENTATION':
       return { ...state, presentationMode: !state.presentationMode };
-    case 'TOGGLE_NOTATION':
-      return { ...state, notationVisible: !state.notationVisible };
     case 'SET_AUTONOMY_TIER':
       return { ...state, autonomyTier: action.tier };
     case 'SET_EXPOSURE':

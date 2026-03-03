@@ -3,13 +3,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { ShieldCheck, X, Zap } from 'lucide-react';
+import { X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CompanyChips } from './ToggleChips';
 import { useDashboard } from '@/lib/DashboardContext';
 import {
-  COMPANIES, COMPANY_COLORS, riskPoints, quadrantLabels,
+  COMPANIES, COMPANY_COLORS, riskPoints,
   type Company, type RiskPoint,
 } from '@/lib/data';
 
@@ -17,22 +16,22 @@ function classifyRiskTier(x: number, y: number): { tier: string; color: string; 
   if (x >= 50 && y >= 50) return {
     tier: 'Critical Risk',
     color: 'hsl(0 84% 45%)',
-    controls: ['Executive sign-off required', 'Full red-team + external audit', 'Mandatory immutable audit trails (RG02)', 'Real-time monitoring with kill-switch', 'Quarterly fairness audits (VA01)', 'Incident response < 15 minutes'],
+    controls: ['Exec sign-off', 'Full red-team + audit', 'Immutable audit trails', 'Real-time monitoring', 'Kill-switch', 'Fairness audits'],
   };
   if (x < 50 && y >= 50) return {
     tier: 'Elevated Risk',
     color: 'hsl(27 87% 50%)',
-    controls: ['Cross-functional review', 'Enhanced human oversight', 'Escalation protocols', 'Regular fairness audits', 'Subgroup disparity monitoring'],
+    controls: ['Cross-functional review', 'Enhanced oversight', 'Escalation protocols', 'Disparity monitoring'],
   };
   if (x >= 50 && y < 50) return {
     tier: 'Operational Risk',
     color: 'hsl(217 91% 48%)',
-    controls: ['Technical safeguards', 'Automated monitoring', 'Periodic review cycle', 'Standard audit trails', 'Circuit breakers'],
+    controls: ['Tech safeguards', 'Auto monitoring', 'Periodic review', 'Circuit breakers'],
   };
   return {
     tier: 'Standard Risk',
     color: 'hsl(142 76% 36%)',
-    controls: ['Standard development practices', 'Basic monitoring', 'Regular check-ins', 'Standard QA procedures'],
+    controls: ['Standard practices', 'Basic monitoring', 'Regular check-ins'],
   };
 }
 
@@ -41,7 +40,6 @@ export function RiskQuadrant() {
   const { selectedCompanies, highlightedCompany } = state;
   const [showDoorDash, setShowDoorDash] = useState(true);
   const [showCompetitors, setShowCompetitors] = useState(true);
-  const [showMandatoryControls, setShowMandatoryControls] = useState(true);
   const [selectedPoint, setSelectedPoint] = useState<RiskPoint | null>(null);
 
   const visiblePoints = useMemo(() => {
@@ -58,6 +56,17 @@ export function RiskQuadrant() {
     return classifyRiskTier(selectedPoint.x, selectedPoint.y);
   }, [selectedPoint]);
 
+  const quadrantCounts = useMemo(() => {
+    const counts = { critical: 0, elevated: 0, operational: 0, standard: 0 };
+    visiblePoints.forEach(p => {
+      if (p.x >= 50 && p.y >= 50) counts.critical++;
+      else if (p.x < 50 && p.y >= 50) counts.elevated++;
+      else if (p.x >= 50 && p.y < 50) counts.operational++;
+      else counts.standard++;
+    });
+    return counts;
+  }, [visiblePoints]);
+
   const svgW = 600;
   const svgH = 500;
   const pad = { top: 40, right: 40, bottom: 50, left: 60 };
@@ -65,7 +74,7 @@ export function RiskQuadrant() {
   const plotH = svgH - pad.top - pad.bottom;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
           <p className="text-sm font-medium text-muted-foreground mb-2">Companies</p>
@@ -86,21 +95,28 @@ export function RiskQuadrant() {
             <Switch checked={showCompetitors} onCheckedChange={setShowCompetitors} />
             <span>Competitors</span>
           </label>
-          <label className="flex items-center gap-2 cursor-pointer" data-testid="toggle-mandatory-controls">
-            <Switch checked={showMandatoryControls} onCheckedChange={setShowMandatoryControls} />
-            <span>Mandatory Controls</span>
-          </label>
         </div>
+      </div>
+
+      <div className="grid grid-cols-4 gap-2">
+        {[
+          { label: 'Critical', count: quadrantCounts.critical, color: 'hsl(0 84% 45%)' },
+          { label: 'Elevated', count: quadrantCounts.elevated, color: 'hsl(27 87% 50%)' },
+          { label: 'Operational', count: quadrantCounts.operational, color: 'hsl(217 91% 48%)' },
+          { label: 'Standard', count: quadrantCounts.standard, color: 'hsl(142 76% 36%)' },
+        ].map(q => (
+          <div key={q.label} className="rounded-md border p-2 flex items-center gap-2" data-testid={`quadrant-count-${q.label.toLowerCase()}`}>
+            <span className="w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ backgroundColor: q.color }} />
+            <span className="text-lg font-bold" style={{ color: q.color }}>{q.count}</span>
+            <span className="text-xs text-muted-foreground">{q.label}</span>
+          </div>
+        ))}
       </div>
 
       <div className="flex gap-6">
         <div className="flex-1">
           <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base">AI Governance Risk Prioritization Framework</CardTitle>
-              <p className="text-sm text-muted-foreground">Mapping AI systems by execution authority and stakeholder exposure</p>
-            </CardHeader>
-            <CardContent>
+            <CardContent className="pt-4">
               <div className="w-full overflow-x-auto">
                 <svg viewBox={`0 0 ${svgW} ${svgH}`} className="w-full max-w-[700px] mx-auto" style={{ fontFamily: 'var(--font-sans)' }}>
                   <defs>
@@ -132,17 +148,10 @@ export function RiskQuadrant() {
 
                   <rect x={pad.left} y={pad.top} width={plotW} height={plotH} fill="none" stroke="hsl(var(--border))" strokeWidth="1" />
 
-                  <text x={pad.left + plotW / 4} y={pad.top + 18} textAnchor="middle" fontSize="10" fontWeight="600" fill="hsl(27 87% 50%)">ELEVATED RISK</text>
-                  <text x={pad.left + plotW / 4} y={pad.top + 30} textAnchor="middle" fontSize="8" fill="hsl(var(--muted-foreground))">Enhanced Monitoring</text>
-
-                  <text x={pad.left + 3 * plotW / 4} y={pad.top + 18} textAnchor="middle" fontSize="10" fontWeight="600" fill="hsl(0 84% 45%)">CRITICAL RISK</text>
-                  <text x={pad.left + 3 * plotW / 4} y={pad.top + 30} textAnchor="middle" fontSize="8" fill="hsl(var(--muted-foreground))">Mandatory Controls</text>
-
-                  <text x={pad.left + plotW / 4} y={pad.top + plotH - 10} textAnchor="middle" fontSize="10" fontWeight="600" fill="hsl(142 76% 36%)">STANDARD RISK</text>
-                  <text x={pad.left + plotW / 4} y={pad.top + plotH + 2} textAnchor="middle" fontSize="8" fill="hsl(var(--muted-foreground))">Baseline Governance</text>
-
-                  <text x={pad.left + 3 * plotW / 4} y={pad.top + plotH - 10} textAnchor="middle" fontSize="10" fontWeight="600" fill="hsl(217 91% 48%)">OPERATIONAL RISK</text>
-                  <text x={pad.left + 3 * plotW / 4} y={pad.top + plotH + 2} textAnchor="middle" fontSize="8" fill="hsl(var(--muted-foreground))">Standard + Monitoring</text>
+                  <text x={pad.left + plotW / 4} y={pad.top + 18} textAnchor="middle" fontSize="10" fontWeight="600" fill="hsl(27 87% 50%)">ELEVATED</text>
+                  <text x={pad.left + 3 * plotW / 4} y={pad.top + 18} textAnchor="middle" fontSize="10" fontWeight="600" fill="hsl(0 84% 45%)">CRITICAL</text>
+                  <text x={pad.left + plotW / 4} y={pad.top + plotH - 10} textAnchor="middle" fontSize="10" fontWeight="600" fill="hsl(142 76% 36%)">STANDARD</text>
+                  <text x={pad.left + 3 * plotW / 4} y={pad.top + plotH - 10} textAnchor="middle" fontSize="10" fontWeight="600" fill="hsl(217 91% 48%)">OPERATIONAL</text>
 
                   <text x={pad.left + plotW / 2} y={svgH - 8} textAnchor="middle" fontSize="11" fontWeight="600" fill="hsl(var(--foreground))">Execution Authority</text>
                   <text x={pad.left - 4} y={svgH - 18} textAnchor="end" fontSize="9" fill="hsl(var(--muted-foreground))">Assistive</text>
@@ -219,7 +228,7 @@ export function RiskQuadrant() {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 20 }}
               transition={{ duration: 0.25 }}
-              className="w-80 flex-shrink-0 space-y-4"
+              className="w-72 flex-shrink-0"
             >
               <Card>
                 <CardHeader className="pb-2">
@@ -232,80 +241,52 @@ export function RiskQuadrant() {
                       <X className="w-4 h-4" />
                     </Button>
                   </div>
-                  <Badge
-                    className="w-fit mt-1 no-default-active-elevate"
-                    style={{ backgroundColor: selectedClassification.color, color: '#fff' }}
-                  >
-                    {selectedClassification.tier}
-                  </Badge>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Badge
+                      className="no-default-active-elevate"
+                      style={{ backgroundColor: selectedClassification.color, color: '#fff' }}
+                    >
+                      {selectedClassification.tier}
+                    </Badge>
+                    <span className="text-[10px] text-muted-foreground">{selectedPoint.company}</span>
+                  </div>
                 </CardHeader>
                 <CardContent>
-                  <ScrollArea className="h-[340px]">
-                    <div className="space-y-4 pr-2">
-                      <div>
-                        <p className="text-xs font-medium text-muted-foreground mb-1">Company</p>
-                        <p className="text-sm">{selectedPoint.company}</p>
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-[11px] font-medium text-muted-foreground mb-1.5">Required Controls</p>
+                      <div className="flex flex-wrap gap-1">
+                        {selectedClassification.controls.map((control, i) => (
+                          <Badge
+                            key={i}
+                            variant="outline"
+                            className="text-[10px] no-default-active-elevate"
+                            style={{ borderColor: selectedClassification.color + '60', color: selectedClassification.color }}
+                          >
+                            {control}
+                          </Badge>
+                        ))}
                       </div>
-                      <div>
-                        <p className="text-xs font-medium text-muted-foreground mb-1">Description</p>
-                        <p className="text-sm text-muted-foreground leading-relaxed">{selectedPoint.description}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs font-medium text-muted-foreground mb-1">Position</p>
-                        <p className="text-sm">Authority: {selectedPoint.x}% | Exposure: {selectedPoint.y}%</p>
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2 mb-2">
-                          <Zap className="w-3.5 h-3.5 text-chart-2" />
-                          <p className="text-xs font-medium">Auto-Classified Controls</p>
-                        </div>
-                        <ul className="space-y-1.5">
-                          {selectedClassification.controls.map((control, i) => (
-                            <li key={i} className="flex items-start gap-2 text-xs text-muted-foreground">
-                              <ShieldCheck className="w-3 h-3 mt-0.5 flex-shrink-0" style={{ color: selectedClassification.color }} />
-                              {control}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                      {selectedPoint.controls.length > 0 && (
-                        <div>
-                          <p className="text-xs font-medium text-muted-foreground mb-2">System-Specific Controls</p>
-                          <ul className="space-y-1.5">
-                            {selectedPoint.controls.map((control, i) => (
-                              <li key={i} className="flex items-start gap-2 text-xs text-muted-foreground">
-                                <span className="w-1 h-1 rounded-full bg-muted-foreground mt-1.5 flex-shrink-0" />
-                                {control}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
                     </div>
-                  </ScrollArea>
+                    {selectedPoint.controls.length > 0 && (
+                      <div>
+                        <p className="text-[11px] font-medium text-muted-foreground mb-1.5">System-Specific</p>
+                        <div className="flex flex-wrap gap-1">
+                          {selectedPoint.controls.map((control, i) => (
+                            <Badge
+                              key={i}
+                              variant="outline"
+                              className="text-[10px] no-default-active-elevate"
+                            >
+                              {control}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
-
-              {showMandatoryControls && (
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-xs flex items-center gap-1.5">
-                      <ShieldCheck className="w-3.5 h-3.5 text-destructive" />
-                      Quadrant Control Summary
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2 text-xs">
-                      {Object.entries(quadrantLabels).map(([key, q]) => (
-                        <div key={key} className="space-y-0.5">
-                          <p className="font-medium">{q.title}</p>
-                          <p className="text-muted-foreground">{q.subtitle}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
             </motion.div>
           )}
         </AnimatePresence>

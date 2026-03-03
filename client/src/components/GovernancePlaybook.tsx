@@ -2,14 +2,12 @@ import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import {
-  CheckCircle2, XCircle, ChevronRight, Zap, FileText, AlertTriangle,
-  ShieldCheck, X, Sparkles,
+  CheckCircle2, XCircle, ChevronRight, AlertTriangle,
+  ShieldCheck, X, Sparkles, FileText,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useDashboard } from '@/lib/DashboardContext';
@@ -17,22 +15,6 @@ import { lifecycleStages, gates, controlSwimlanes, type LifecycleStage, type Gat
 
 function getControlKey(autonomy: string, exposure: string): string {
   return `${autonomy}-${exposure}`;
-}
-
-function generatePresenterScript(autonomy: string, exposure: string): string[] {
-  const level = autonomy === 'Autonomous' && exposure === 'High' ? 'maximum'
-    : autonomy === 'Autonomous' || exposure === 'High' ? 'elevated' : 'standard';
-
-  const lines = [
-    `This governance lifecycle is configured for ${autonomy} autonomy with ${exposure} stakeholder exposure -- a ${level} governance intensity.`,
-    `Stage 1 begins with problem selection as governance filtering. Teams must justify why an agentic solution is appropriate instead of deterministic automation.`,
-    `The agent specification in Stage 2 formalizes the core alignment question: what is the system optimizing for? This is where optimization misalignment is prevented.`,
-    `Workflow design in Stage 3 assigns the autonomy tier and defines human-in-the-loop requirements. ${autonomy === 'Autonomous' ? 'For autonomous systems, mandatory kill-switches and multi-stakeholder escalation paths are required.' : 'Escalation triggers are tied to measurable conditions.'}`,
-    `Red-teaming in Stage 4 stress-tests against adversarial personas. ${exposure === 'High' ? 'High-exposure systems require all attack taxonomy categories including cascade failure simulation.' : 'Standard testing covers functional and security scenarios.'}`,
-    `${autonomy === 'Autonomous' && exposure === 'High' ? 'Pilot deployment requires executive kill-switch authorization and real-time fairness monitoring with incident response under 15 minutes.' : 'Pilot deployment proceeds with defined guardrails and monitoring.'}`,
-    `Scaling is treated as a governance decision -- not a feature update. ${autonomy === 'Autonomous' ? 'Autonomy expansion requires board-level approval, zero significant fairness deviations, and verified system rollback capability.' : 'Standard scaling review ensures continued compliance.'}`,
-  ];
-  return lines;
 }
 
 function runReadinessCheck(stage: LifecycleStage, controlKey: string, completedControls: Set<string>): { passed: boolean; missing: string[] } {
@@ -46,12 +28,10 @@ export function GovernancePlaybook() {
   const { autonomyTier, exposureLevel } = state;
   const [selectedStage, setSelectedStage] = useState<LifecycleStage | null>(null);
   const [selectedGate, setSelectedGate] = useState<Gate | null>(null);
-  const [showScript, setShowScript] = useState(false);
   const [readinessResults, setReadinessResults] = useState<Record<number, { passed: boolean; missing: string[] }>>({});
   const [completedControls, setCompletedControls] = useState<Set<string>>(new Set());
 
   const controlKey = getControlKey(autonomyTier, exposureLevel);
-  const script = useMemo(() => generatePresenterScript(autonomyTier, exposureLevel), [autonomyTier, exposureLevel]);
 
   const intensityLevel = autonomyTier === 'Autonomous' && exposureLevel === 'High' ? 'Maximum'
     : autonomyTier === 'Autonomous' || exposureLevel === 'High' ? 'Elevated' : 'Standard';
@@ -59,8 +39,22 @@ export function GovernancePlaybook() {
   const intensityColor = intensityLevel === 'Maximum' ? 'hsl(0 84% 45%)'
     : intensityLevel === 'Elevated' ? 'hsl(27 87% 50%)' : 'hsl(142 76% 36%)';
 
+  const totalControls = useMemo(() => {
+    return lifecycleStages.reduce((sum, s) => {
+      const controls = s.mandatoryControls[controlKey] || [];
+      return sum + controls.length;
+    }, 0);
+  }, [controlKey]);
+
+  const completedCount = useMemo(() => {
+    return lifecycleStages.reduce((sum, s) => {
+      const controls = s.mandatoryControls[controlKey] || [];
+      return sum + controls.filter(c => completedControls.has(`${s.id}-${c}`)).length;
+    }, 0);
+  }, [controlKey, completedControls]);
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-4 flex-wrap">
           <div>
@@ -94,38 +88,34 @@ export function GovernancePlaybook() {
               </SelectContent>
             </Select>
           </div>
-          <div className="self-end">
+          <div className="self-end flex items-center gap-2">
             <Badge className="no-default-active-elevate" style={{ backgroundColor: intensityColor, color: '#fff' }}>
-              {intensityLevel} Governance Intensity
+              {intensityLevel}
             </Badge>
+            <span className="text-xs text-muted-foreground">{completedCount}/{totalControls} controls</span>
           </div>
         </div>
 
-        <div className="flex gap-2 flex-wrap">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              const results: Record<number, { passed: boolean; missing: string[] }> = {};
-              lifecycleStages.forEach(s => { results[s.id] = runReadinessCheck(s, controlKey, completedControls); });
-              setReadinessResults(results);
-            }}
-            data-testid="button-readiness-check"
-          >
-            <Zap className="w-4 h-4 mr-1" />
-            Run Readiness Check
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => setShowScript(!showScript)} data-testid="button-generate-script">
-            <FileText className="w-4 h-4 mr-1" />
-            Presenter Script
-          </Button>
-        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            const results: Record<number, { passed: boolean; missing: string[] }> = {};
+            lifecycleStages.forEach(s => { results[s.id] = runReadinessCheck(s, controlKey, completedControls); });
+            setReadinessResults(results);
+          }}
+          data-testid="button-readiness-check"
+        >
+          <ShieldCheck className="w-4 h-4 mr-1" />
+          Check Readiness
+        </Button>
       </div>
 
       <div className="space-y-3">
         <div className="flex items-stretch gap-0 overflow-x-auto pb-2" data-testid="lifecycle-pipeline">
           {lifecycleStages.map((stage, i) => {
             const controls = stage.mandatoryControls[controlKey] || stage.mandatoryControls['Assistive-Low'] || [];
+            const stageCompleted = controls.filter(c => completedControls.has(`${stage.id}-${c}`)).length;
             const readiness = readinessResults[stage.id];
             const isSelected = selectedStage?.id === stage.id;
             const gateAfter = i < gates.length ? gates[i] : null;
@@ -135,7 +125,7 @@ export function GovernancePlaybook() {
                 <motion.div
                   className="cursor-pointer rounded-md border p-3 transition-all duration-200"
                   style={{
-                    width: 160,
+                    width: 150,
                     borderColor: isSelected ? 'hsl(var(--primary))' : readiness ? (readiness.passed ? 'hsl(142 76% 36%)' : 'hsl(0 84% 45%)') : 'hsl(var(--border))',
                     borderWidth: isSelected ? 2 : 1,
                     backgroundColor: isSelected ? 'hsl(var(--accent))' : 'hsl(var(--card))',
@@ -147,15 +137,26 @@ export function GovernancePlaybook() {
                   data-testid={`stage-card-${stage.id}`}
                 >
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-[10px] font-mono text-muted-foreground">Stage {stage.id}</span>
+                    <span className="text-[10px] font-mono text-muted-foreground">S{stage.id}</span>
                     {readiness && (
                       readiness.passed
                         ? <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />
                         : <XCircle className="w-3.5 h-3.5 text-destructive" />
                     )}
                   </div>
-                  <p className="text-xs font-semibold leading-tight mb-1">{stage.title}</p>
-                  <p className="text-[10px] text-muted-foreground leading-tight">{controls.length} controls active</p>
+                  <p className="text-xs font-semibold leading-tight mb-1.5">{stage.shortTitle}</p>
+                  <div className="flex items-center gap-1">
+                    <div className="flex-1 h-1 rounded-full bg-muted overflow-hidden">
+                      <div
+                        className="h-full rounded-full transition-all duration-300"
+                        style={{
+                          width: controls.length > 0 ? `${(stageCompleted / controls.length) * 100}%` : '0%',
+                          backgroundColor: intensityColor,
+                        }}
+                      />
+                    </div>
+                    <span className="text-[9px] text-muted-foreground">{stageCompleted}/{controls.length}</span>
+                  </div>
                 </motion.div>
 
                 {gateAfter && (
@@ -190,14 +191,18 @@ export function GovernancePlaybook() {
             <Card key={lane.id}>
               <CardHeader className="py-2 px-3">
                 <CardTitle className="text-xs">{lane.label}</CardTitle>
-                <p className="text-[10px] text-muted-foreground">{lane.subtitle}</p>
               </CardHeader>
               <CardContent className="px-3 pb-2">
-                <div className="space-y-1">
+                <div className="flex gap-0.5">
                   {lane.stages.map((content, i) => (
-                    <div key={i} className="text-[10px] text-muted-foreground leading-tight p-1 rounded" style={{ minHeight: 20, backgroundColor: content ? 'hsl(var(--accent))' : 'transparent' }}>
-                      {content || <span className="italic opacity-40">--</span>}
-                    </div>
+                    <div
+                      key={i}
+                      className="flex-1 h-3 rounded-sm transition-colors"
+                      style={{
+                        backgroundColor: content ? intensityColor + '40' : 'hsl(var(--muted))',
+                      }}
+                      title={content || `Stage ${i + 1}: inactive`}
+                    />
                   ))}
                 </div>
               </CardContent>
@@ -217,8 +222,8 @@ export function GovernancePlaybook() {
             <Card>
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between gap-1">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <span className="font-mono text-xs text-muted-foreground">Stage {selectedStage.id}</span>
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <span className="font-mono text-xs text-muted-foreground">S{selectedStage.id}</span>
                     {selectedStage.title}
                   </CardTitle>
                   <Button size="icon" variant="ghost" onClick={() => setSelectedStage(null)} data-testid="button-close-stage">
@@ -227,71 +232,37 @@ export function GovernancePlaybook() {
                 </div>
               </CardHeader>
               <CardContent>
-                <Tabs defaultValue="overview">
-                  <TabsList>
-                    <TabsTrigger value="overview" data-testid="tab-overview">Overview</TabsTrigger>
-                    <TabsTrigger value="controls" data-testid="tab-controls">Controls</TabsTrigger>
-                    <TabsTrigger value="failures" data-testid="tab-failures">Failure Modes</TabsTrigger>
-                  </TabsList>
-
-                  <TabsContent value="overview" className="space-y-4 mt-4">
-                    <div>
-                      <p className="text-xs font-medium text-muted-foreground mb-1">Purpose</p>
-                      <p className="text-sm leading-relaxed">{selectedStage.purpose}</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+                        <ShieldCheck className="w-3.5 h-3.5" style={{ color: intensityColor }} />
+                        Controls ({autonomyTier} / {exposureLevel})
+                      </p>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 text-[10px] px-2"
+                        onClick={() => {
+                          const controls = selectedStage.mandatoryControls[controlKey] || [];
+                          const next = new Set(completedControls);
+                          controls.forEach(c => next.add(`${selectedStage.id}-${c}`));
+                          setCompletedControls(next);
+                        }}
+                        data-testid="button-auto-populate"
+                      >
+                        <Sparkles className="w-3 h-3 mr-1" />
+                        Mark all
+                      </Button>
                     </div>
-                    <div>
-                      <p className="text-xs font-medium text-muted-foreground mb-2">Required Deliverables</p>
-                      <ul className="space-y-1">
-                        {selectedStage.deliverables.map((d, i) => {
-                          const readiness = readinessResults[selectedStage.id];
-                          const isMissing = readiness && !readiness.passed && readiness.missing.some(m => d.toLowerCase().includes(m.toLowerCase().split(' ')[0]));
-                          return (
-                            <li key={i} className="flex items-center gap-2 text-sm">
-                              {isMissing
-                                ? <XCircle className="w-3.5 h-3.5 text-destructive flex-shrink-0" />
-                                : <CheckCircle2 className="w-3.5 h-3.5 text-green-500 flex-shrink-0" />
-                              }
-                              <span className={isMissing ? 'text-destructive' : ''}>{d}</span>
-                            </li>
-                          );
-                        })}
-                      </ul>
-                    </div>
-                  </TabsContent>
-
-                  <TabsContent value="controls" className="mt-4">
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between gap-2 mb-2">
-                        <div className="flex items-center gap-2">
-                          <ShieldCheck className="w-4 h-4" style={{ color: intensityColor }} />
-                          <p className="text-sm font-medium">Mandatory Controls for {autonomyTier} / {exposureLevel} Exposure</p>
-                        </div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            const controls = selectedStage.mandatoryControls[controlKey] || [];
-                            const next = new Set(completedControls);
-                            controls.forEach(c => next.add(`${selectedStage.id}-${c}`));
-                            setCompletedControls(next);
-                          }}
-                          data-testid="button-auto-populate"
-                        >
-                          <Sparkles className="w-3 h-3 mr-1" />
-                          Auto-populate
-                        </Button>
-                      </div>
-                      <p className="text-xs text-muted-foreground mb-2">Click a control to mark it as complete</p>
+                    <div className="space-y-1">
                       {(selectedStage.mandatoryControls[controlKey] || []).map((control, i) => {
                         const controlId = `${selectedStage.id}-${control}`;
                         const isDone = completedControls.has(controlId);
                         return (
-                          <motion.div
+                          <div
                             key={i}
-                            initial={{ opacity: 0, x: -10 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: i * 0.05 }}
-                            className="flex items-start gap-2 text-sm p-2 rounded-md bg-accent/50 cursor-pointer"
+                            className="flex items-center gap-2 text-xs p-1.5 rounded cursor-pointer hover:bg-accent/50 transition-colors"
                             onClick={() => {
                               const next = new Set(completedControls);
                               if (isDone) next.delete(controlId); else next.add(controlId);
@@ -300,27 +271,60 @@ export function GovernancePlaybook() {
                             data-testid={`control-check-${selectedStage.id}-${i}`}
                           >
                             {isDone
-                              ? <CheckCircle2 className="w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-green-500" />
-                              : <ShieldCheck className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" style={{ color: intensityColor }} />
+                              ? <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0 text-green-500" />
+                              : <div className="w-3.5 h-3.5 rounded-full border-2 flex-shrink-0" style={{ borderColor: intensityColor }} />
                             }
-                            <span className={isDone ? 'line-through opacity-60' : ''}>{control}</span>
-                          </motion.div>
+                            <span className={isDone ? 'line-through opacity-50' : ''}>{control}</span>
+                          </div>
                         );
                       })}
                     </div>
-                  </TabsContent>
+                  </div>
 
-                  <TabsContent value="failures" className="mt-4">
-                    <div className="space-y-2">
-                      {selectedStage.failureModes.map((mode, i) => (
-                        <div key={i} className="flex items-start gap-2 text-sm p-2 rounded-md bg-destructive/5">
-                          <AlertTriangle className="w-3.5 h-3.5 mt-0.5 text-destructive flex-shrink-0" />
-                          {mode}
-                        </div>
-                      ))}
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-xs font-medium text-muted-foreground mb-1.5 flex items-center gap-1.5">
+                        <FileText className="w-3.5 h-3.5" />
+                        Deliverables
+                      </p>
+                      <div className="flex flex-wrap gap-1">
+                        {selectedStage.deliverables.map((d, i) => {
+                          const readiness = readinessResults[selectedStage.id];
+                          const isMissing = readiness && !readiness.passed && readiness.missing.some(m => d.toLowerCase().includes(m.toLowerCase().split(' ')[0]));
+                          return (
+                            <Badge
+                              key={i}
+                              variant="outline"
+                              className="text-[10px] no-default-active-elevate"
+                              style={isMissing ? { borderColor: 'hsl(0 84% 45%)', color: 'hsl(0 84% 45%)' } : {}}
+                            >
+                              {isMissing ? <XCircle className="w-2.5 h-2.5 mr-0.5" /> : <CheckCircle2 className="w-2.5 h-2.5 mr-0.5 text-green-500" />}
+                              {d}
+                            </Badge>
+                          );
+                        })}
+                      </div>
                     </div>
-                  </TabsContent>
-                </Tabs>
+                    <div>
+                      <p className="text-xs font-medium text-muted-foreground mb-1.5 flex items-center gap-1.5">
+                        <AlertTriangle className="w-3.5 h-3.5 text-destructive" />
+                        Failure Modes
+                      </p>
+                      <div className="flex flex-wrap gap-1">
+                        {selectedStage.failureModes.map((mode, i) => (
+                          <Badge
+                            key={i}
+                            variant="outline"
+                            className="text-[10px] no-default-active-elevate"
+                            style={{ borderColor: 'hsl(0 84% 45% / 0.3)', color: 'hsl(0 84% 45%)' }}
+                          >
+                            {mode}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </motion.div>
@@ -338,7 +342,7 @@ export function GovernancePlaybook() {
             <Card>
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between gap-1">
-                  <CardTitle className="text-base flex items-center gap-2">
+                  <CardTitle className="text-sm flex items-center gap-2">
                     <span
                       className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold border-2"
                       style={{ borderColor: intensityColor, color: intensityColor }}
@@ -355,80 +359,36 @@ export function GovernancePlaybook() {
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <p className="text-xs font-medium text-muted-foreground mb-2">Go/No-Go Criteria</p>
-                    <ul className="space-y-1.5">
+                    <p className="text-xs font-medium text-muted-foreground mb-1.5">Go/No-Go</p>
+                    <div className="space-y-1">
                       {(selectedGate.criteria[controlKey] || selectedGate.criteria['Assistive-Low'] || []).map((c, i) => (
-                        <li key={i} className="flex items-start gap-2 text-sm">
-                          <CheckCircle2 className="w-3.5 h-3.5 mt-0.5 text-green-500 flex-shrink-0" />
+                        <div key={i} className="flex items-center gap-1.5 text-xs">
+                          <CheckCircle2 className="w-3 h-3 text-green-500 flex-shrink-0" />
                           {c}
-                        </li>
+                        </div>
                       ))}
-                    </ul>
+                    </div>
                   </div>
                   <div>
-                    <p className="text-xs font-medium text-muted-foreground mb-2">Required Sign-offs</p>
-                    <ul className="space-y-1.5">
+                    <p className="text-xs font-medium text-muted-foreground mb-1.5">Sign-offs</p>
+                    <div className="flex flex-wrap gap-1">
                       {(selectedGate.signOffs[controlKey] || selectedGate.signOffs['Assistive-Low'] || []).map((s, i) => (
-                        <li key={i} className="flex items-center gap-2 text-sm">
-                          <Badge variant="outline" className="text-[10px] no-default-active-elevate">{s}</Badge>
-                        </li>
+                        <Badge key={i} variant="outline" className="text-[10px] no-default-active-elevate">{s}</Badge>
                       ))}
-                    </ul>
+                    </div>
                   </div>
                   <div>
-                    <p className="text-xs font-medium text-muted-foreground mb-2">Required Evidence</p>
-                    <ul className="space-y-1.5">
+                    <p className="text-xs font-medium text-muted-foreground mb-1.5">Evidence</p>
+                    <div className="flex flex-wrap gap-1">
                       {selectedGate.evidence.map((e, i) => (
-                        <li key={i} className="flex items-start gap-2 text-sm">
-                          <FileText className="w-3.5 h-3.5 mt-0.5 text-muted-foreground flex-shrink-0" />
+                        <Badge key={i} variant="outline" className="text-[10px] no-default-active-elevate">
+                          <FileText className="w-2.5 h-2.5 mr-0.5" />
                           {e}
-                        </li>
+                        </Badge>
                       ))}
-                    </ul>
+                    </div>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {showScript && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <Card>
-              <CardHeader className="pb-2">
-                <div className="flex items-center justify-between gap-1">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-chart-2" />
-                    Presenter Script
-                  </CardTitle>
-                  <Button size="icon" variant="ghost" onClick={() => setShowScript(false)} data-testid="button-close-script">
-                    <X className="w-4 h-4" />
-                  </Button>
-                </div>
-                <p className="text-sm text-muted-foreground">For {autonomyTier} autonomy, {exposureLevel} exposure</p>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-3" data-testid="presenter-script-list">
-                  {script.map((line, i) => (
-                    <motion.li
-                      key={i}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: i * 0.08 }}
-                      className="flex items-start gap-2 text-sm"
-                    >
-                      <span className="font-mono text-xs text-muted-foreground mt-0.5 flex-shrink-0">{i + 1}.</span>
-                      <span className="leading-relaxed">{line}</span>
-                    </motion.li>
-                  ))}
-                </ul>
               </CardContent>
             </Card>
           </motion.div>

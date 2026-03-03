@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { X, FileText, Info } from 'lucide-react';
+import { X, Info } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CompanyChips, DomainChips } from './ToggleChips';
 import { useDashboard } from '@/lib/DashboardContext';
@@ -12,21 +12,15 @@ import {
   techTags, type Company, type Domain, type TechTag,
 } from '@/lib/data';
 
-const STATUS_STYLES: Record<string, { bg: string; text: string }> = {
-  Live: { bg: 'hsl(142 76% 36%)', text: '#fff' },
-  Pilot: { bg: 'hsl(27 87% 50%)', text: '#fff' },
+const AUTONOMY_COLORS: Record<string, { bg: string; border: string; text: string }> = {
+  Assistive: { bg: 'hsl(210 15% 95%)', border: 'hsl(210 15% 70%)', text: 'hsl(210 15% 35%)' },
+  Conditional: { bg: 'hsl(27 87% 95%)', border: 'hsl(27 87% 50%)', text: 'hsl(27 87% 35%)' },
+  Autonomous: { bg: 'hsl(0 84% 96%)', border: 'hsl(0 84% 45%)', text: 'hsl(0 84% 35%)' },
 };
 
-const SOURCE_STYLES: Record<string, { bg: string; text: string }> = {
-  'In-house': { bg: 'hsl(217 91% 48%)', text: '#fff' },
-  Partner: { bg: 'hsl(280 65% 48%)', text: '#fff' },
-  Mixed: { bg: 'hsl(340 75% 50%)', text: '#fff' },
-};
-
-const AUTONOMY_STYLES: Record<string, { bg: string; text: string }> = {
-  Assistive: { bg: 'hsl(210 15% 80%)', text: 'hsl(0 0% 15%)' },
-  Conditional: { bg: 'hsl(27 87% 50%)', text: '#fff' },
-  Autonomous: { bg: 'hsl(0 84% 45%)', text: '#fff' },
+const STATUS_DOT: Record<string, string> = {
+  Live: 'hsl(142 76% 36%)',
+  Pilot: 'hsl(27 87% 50%)',
 };
 
 interface CellDetail {
@@ -35,58 +29,28 @@ interface CellDetail {
   tags: TechTag[];
 }
 
-function generatePresenterNotes(companies: Company[], domains: Domain[]): string[] {
-  const notes: string[] = [];
-
-  notes.push(`Comparing ${companies.join(', ')} across ${domains.join(', ')}.`);
-
-  const inHouseCounts = companies.map(c => ({
-    company: c,
-    count: domains.reduce((sum, d) => sum + techTags[c][d].filter(t => t.source === 'In-house').length, 0),
-  }));
-  const mostInHouse = inHouseCounts.reduce((a, b) => a.count > b.count ? a : b);
-  notes.push(`${mostInHouse.company} has the most in-house technology (${mostInHouse.count} systems), indicating deeper strategic control over AI governance.`);
-
-  const autonomousCounts = companies.map(c => ({
-    company: c,
-    count: domains.reduce((sum, d) => sum + techTags[c][d].filter(t => t.autonomy === 'Autonomous').length, 0),
-  }));
-  const mostAutonomous = autonomousCounts.reduce((a, b) => a.count > b.count ? a : b);
-  if (mostAutonomous.count > 0) {
-    notes.push(`${mostAutonomous.company} deploys the most autonomous systems (${mostAutonomous.count}), requiring the most comprehensive governance controls.`);
-  }
-
-  const partnerReliant = companies.filter(c =>
-    domains.every(d => techTags[c][d].some(t => t.source === 'Partner'))
-  );
-  if (partnerReliant.length > 0) {
-    notes.push(`${partnerReliant.join(', ')} rely on partnerships across all selected domains, creating governance fragmentation and reduced control over core AI decisions.`);
-  }
-
-  if (domains.includes('Dispatch AI') && companies.includes('DoorDash')) {
-    notes.push("DoorDash's ADP is the only platform orchestrating human Dashers, sidewalk robots, and drones through a single autonomous dispatch engine -- a unique governance challenge.");
-  }
-
-  if (companies.includes('Grubhub')) {
-    notes.push("Grubhub's reliance on Nash AI for dispatch and support means governance responsibility is split across organizational boundaries, creating accountability gaps.");
-  }
-
-  return notes.slice(0, 7);
-}
-
 export function CompetitorTechMap() {
   const { state, dispatch } = useDashboard();
   const { selectedCompanies, selectedDomains, highlightedCompany } = state;
   const [selectedCell, setSelectedCell] = useState<CellDetail | null>(null);
-  const [showNotes, setShowNotes] = useState(false);
 
-  const presenterNotes = useMemo(
-    () => generatePresenterNotes(selectedCompanies, selectedDomains),
-    [selectedCompanies, selectedDomains]
-  );
+  const techCounts = useMemo(() => {
+    const counts = { total: 0, autonomous: 0, inHouse: 0, pilot: 0 };
+    selectedCompanies.forEach(c => {
+      selectedDomains.forEach(d => {
+        techTags[c][d].forEach(t => {
+          counts.total++;
+          if (t.autonomy === 'Autonomous') counts.autonomous++;
+          if (t.source === 'In-house') counts.inHouse++;
+          if (t.status === 'Pilot') counts.pilot++;
+        });
+      });
+    });
+    return counts;
+  }, [selectedCompanies, selectedDomains]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <div className="space-y-3">
         <div>
           <p className="text-sm font-medium text-muted-foreground mb-2">Companies</p>
@@ -98,37 +62,42 @@ export function CompetitorTechMap() {
             onHighlight={(c) => dispatch({ type: 'SET_HIGHLIGHTED', company: c })}
           />
         </div>
-        <div className="flex items-center justify-between gap-4 flex-wrap">
-          <div>
-            <p className="text-sm font-medium text-muted-foreground mb-2">Domains</p>
-            <DomainChips
-              domains={DOMAINS}
-              selected={selectedDomains}
-              onToggle={(d) => dispatch({ type: 'TOGGLE_DOMAIN', domain: d })}
-            />
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowNotes(!showNotes)}
-            data-testid="button-presenter-notes"
-          >
-            <FileText className="w-4 h-4 mr-1" />
-            Presenter Notes
-          </Button>
+        <div>
+          <p className="text-sm font-medium text-muted-foreground mb-2">Domains</p>
+          <DomainChips
+            domains={DOMAINS}
+            selected={selectedDomains}
+            onToggle={(d) => dispatch({ type: 'TOGGLE_DOMAIN', domain: d })}
+          />
         </div>
       </div>
 
-      <div className="flex gap-3 flex-wrap text-xs text-muted-foreground">
-        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full" style={{ backgroundColor: STATUS_STYLES.Live.bg }} /> Live</span>
-        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full" style={{ backgroundColor: STATUS_STYLES.Pilot.bg }} /> Pilot</span>
-        <span className="font-medium mx-1">|</span>
-        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full" style={{ backgroundColor: SOURCE_STYLES['In-house'].bg }} /> In-house</span>
-        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full" style={{ backgroundColor: SOURCE_STYLES.Partner.bg }} /> Partner</span>
-        <span className="font-medium mx-1">|</span>
-        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm" style={{ backgroundColor: AUTONOMY_STYLES.Assistive.bg }} /> Assistive</span>
-        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm" style={{ backgroundColor: AUTONOMY_STYLES.Conditional.bg }} /> Conditional</span>
-        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm" style={{ backgroundColor: AUTONOMY_STYLES.Autonomous.bg }} /> Autonomous</span>
+      <div className="flex gap-4 flex-wrap text-xs">
+        <div className="flex items-center gap-3 text-muted-foreground">
+          <span className="font-medium text-foreground">Autonomy:</span>
+          {Object.entries(AUTONOMY_COLORS).map(([tier, colors]) => (
+            <span key={tier} className="flex items-center gap-1">
+              <span className="w-3 h-3 rounded-sm border" style={{ backgroundColor: colors.bg, borderColor: colors.border }} />
+              {tier}
+            </span>
+          ))}
+        </div>
+        <span className="text-muted-foreground">|</span>
+        <div className="flex items-center gap-3 text-muted-foreground">
+          <span className="font-medium text-foreground">Status:</span>
+          <span className="flex items-center gap-1">
+            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: STATUS_DOT.Live }} />
+            Live
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: STATUS_DOT.Pilot }} />
+            Pilot
+          </span>
+        </div>
+        <span className="text-muted-foreground">|</span>
+        <span className="text-muted-foreground">
+          {techCounts.total} systems, {techCounts.autonomous} autonomous, {techCounts.pilot} pilot
+        </span>
       </div>
 
       <div className="flex gap-6">
@@ -165,41 +134,33 @@ export function CompetitorTechMap() {
                           animate={{ opacity: 1, scale: 1 }}
                           exit={{ opacity: 0, scale: 0.95 }}
                           transition={{ duration: 0.2 }}
-                          className="p-2 rounded-md cursor-pointer transition-all duration-200 border"
+                          className="p-2 rounded-md cursor-pointer transition-all duration-200"
                           style={{
                             backgroundColor: isSelected ? 'hsl(var(--accent))' : 'hsl(var(--card))',
-                            borderColor: isHighlighted ? COMPANY_COLORS[company] : isSelected ? 'hsl(var(--primary))' : 'hsl(var(--border))',
-                            borderWidth: isHighlighted || isSelected ? 2 : 1,
+                            border: `${isHighlighted || isSelected ? 2 : 1}px solid ${isHighlighted ? COMPANY_COLORS[company] : isSelected ? 'hsl(var(--primary))' : 'hsl(var(--border))'}`,
                           }}
                           onClick={() => setSelectedCell(isSelected ? null : { company, domain, tags })}
                           data-testid={`cell-${company.replace(/\s/g, '-')}-${domain.replace(/\s/g, '-')}`}
                         >
-                          <div className="space-y-1">
-                            {tags.map(tag => (
-                              <div key={tag.label} className="space-y-0.5">
-                                <div className="text-xs font-medium leading-tight">{tag.label}</div>
-                                <div className="flex flex-wrap gap-0.5">
+                          <div className="space-y-1.5">
+                            {tags.map(tag => {
+                              const ac = AUTONOMY_COLORS[tag.autonomy];
+                              return (
+                                <div
+                                  key={tag.label}
+                                  className="flex items-center gap-1.5 rounded px-1.5 py-0.5"
+                                  style={{ backgroundColor: ac.bg, borderLeft: `3px solid ${ac.border}` }}
+                                >
                                   <span
-                                    className="text-[9px] px-1 rounded font-medium"
-                                    style={{ backgroundColor: STATUS_STYLES[tag.status].bg, color: STATUS_STYLES[tag.status].text }}
-                                  >
-                                    {tag.status}
-                                  </span>
-                                  <span
-                                    className="text-[9px] px-1 rounded font-medium"
-                                    style={{ backgroundColor: SOURCE_STYLES[tag.source].bg, color: SOURCE_STYLES[tag.source].text }}
-                                  >
-                                    {tag.source}
-                                  </span>
-                                  <span
-                                    className="text-[9px] px-1 rounded font-medium"
-                                    style={{ backgroundColor: AUTONOMY_STYLES[tag.autonomy].bg, color: AUTONOMY_STYLES[tag.autonomy].text }}
-                                  >
-                                    {tag.autonomy}
+                                    className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                                    style={{ backgroundColor: STATUS_DOT[tag.status] }}
+                                  />
+                                  <span className="text-xs font-medium leading-tight truncate" style={{ color: ac.text }}>
+                                    {tag.label}
                                   </span>
                                 </div>
-                              </div>
-                            ))}
+                              );
+                            })}
                           </div>
                         </motion.div>
                       );
@@ -238,30 +199,33 @@ export function CompetitorTechMap() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <ScrollArea className="h-[300px]">
+                  <ScrollArea className="h-[340px]">
                     <div className="space-y-4 pr-2">
-                      {selectedCell.tags.map(tag => (
-                        <div key={tag.label} className="space-y-2">
-                          <div className="flex items-center gap-2">
-                            <span className="font-semibold text-sm">{tag.label}</span>
-                            <div className="flex gap-1">
-                              <Badge variant="outline" className="text-[10px] no-default-active-elevate">{tag.status}</Badge>
-                              <Badge variant="outline" className="text-[10px] no-default-active-elevate">{tag.source}</Badge>
-                              <Badge
-                                className="text-[10px] no-default-active-elevate"
-                                style={{ backgroundColor: AUTONOMY_STYLES[tag.autonomy].bg, color: AUTONOMY_STYLES[tag.autonomy].text }}
-                              >
-                                {tag.autonomy}
-                              </Badge>
+                      {selectedCell.tags.map(tag => {
+                        const ac = AUTONOMY_COLORS[tag.autonomy];
+                        return (
+                          <div key={tag.label} className="space-y-2">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="font-semibold text-sm">{tag.label}</span>
+                              <div className="flex gap-1">
+                                <Badge variant="outline" className="text-[10px] no-default-active-elevate">{tag.status}</Badge>
+                                <Badge variant="outline" className="text-[10px] no-default-active-elevate">{tag.source}</Badge>
+                                <Badge
+                                  className="text-[10px] no-default-active-elevate"
+                                  style={{ backgroundColor: ac.bg, color: ac.text, border: `1px solid ${ac.border}` }}
+                                >
+                                  {tag.autonomy}
+                                </Badge>
+                              </div>
+                            </div>
+                            <p className="text-xs text-muted-foreground leading-relaxed">{tag.description}</p>
+                            <div className="flex items-start gap-1.5 p-2 rounded-md bg-destructive/10">
+                              <Info className="w-3 h-3 mt-0.5 text-destructive flex-shrink-0" />
+                              <p className="text-xs text-destructive">{tag.riskNote}</p>
                             </div>
                           </div>
-                          <p className="text-xs text-muted-foreground leading-relaxed">{tag.description}</p>
-                          <div className="flex items-start gap-1.5 p-2 rounded-md bg-destructive/10">
-                            <Info className="w-3 h-3 mt-0.5 text-destructive flex-shrink-0" />
-                            <p className="text-xs text-destructive">{tag.riskNote}</p>
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </ScrollArea>
                 </CardContent>
@@ -270,47 +234,6 @@ export function CompetitorTechMap() {
           )}
         </AnimatePresence>
       </div>
-
-      <AnimatePresence>
-        {showNotes && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <Card>
-              <CardHeader className="pb-2">
-                <div className="flex items-center justify-between gap-1">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <FileText className="w-4 h-4" />
-                    Presenter Notes
-                  </CardTitle>
-                  <Button size="icon" variant="ghost" onClick={() => setShowNotes(false)} data-testid="button-close-notes">
-                    <X className="w-4 h-4" />
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2" data-testid="presenter-notes-list">
-                  {presenterNotes.map((note, i) => (
-                    <motion.li
-                      key={i}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: i * 0.08 }}
-                      className="flex items-start gap-2 text-sm"
-                    >
-                      <span className="font-mono text-xs text-muted-foreground mt-0.5">{i + 1}.</span>
-                      {note}
-                    </motion.li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }

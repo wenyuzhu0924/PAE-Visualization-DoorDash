@@ -4,14 +4,13 @@ import {
   ResponsiveContainer, Tooltip as RechartsTooltip,
 } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Lightbulb } from 'lucide-react';
+import { Trophy, TrendingUp, AlertTriangle, Shield } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CompanyChips, DomainChips } from './ToggleChips';
 import { useDashboard } from '@/lib/DashboardContext';
 import {
   COMPANIES, DOMAINS, COMPANY_COLORS,
-  capabilityScores, getAutoInsights,
+  capabilityScores,
   type Company, type Domain,
 } from '@/lib/data';
 
@@ -28,6 +27,73 @@ function getScoreColor(score: number): string {
   return SCORE_COLORS[Math.min(score, 5)];
 }
 
+interface InsightCard {
+  icon: 'trophy' | 'trending' | 'alert' | 'shield';
+  value: string;
+  label: string;
+  color: string;
+}
+
+function getInsightCards(selectedCompanies: Company[], selectedDomains: Domain[]): InsightCard[] {
+  if (selectedCompanies.length === 0 || selectedDomains.length === 0) return [];
+
+  const cards: InsightCard[] = [];
+
+  const scores = selectedCompanies.map(c => ({
+    company: c,
+    avg: selectedDomains.reduce((sum, d) => sum + capabilityScores[c][d], 0) / selectedDomains.length,
+  }));
+
+  const leader = scores.reduce((a, b) => a.avg > b.avg ? a : b);
+  cards.push({
+    icon: 'trophy',
+    value: leader.company,
+    label: `Leads with ${leader.avg.toFixed(1)}/5 avg`,
+    color: COMPANY_COLORS[leader.company],
+  });
+
+  const maxScoreDomains = selectedDomains.filter(d =>
+    selectedCompanies.some(c => capabilityScores[c][d] === 5)
+  );
+  if (maxScoreDomains.length > 0) {
+    cards.push({
+      icon: 'trending',
+      value: `${maxScoreDomains.length}`,
+      label: `domain${maxScoreDomains.length > 1 ? 's' : ''} at max (5)`,
+      color: 'hsl(217 91% 48%)',
+    });
+  }
+
+  const laggard = scores.reduce((a, b) => a.avg < b.avg ? a : b);
+  if (laggard.company !== leader.company) {
+    const gap = leader.avg - laggard.avg;
+    cards.push({
+      icon: 'alert',
+      value: gap.toFixed(1),
+      label: `pt gap: ${leader.company.split(' ')[0]} vs ${laggard.company.split(' ')[0]}`,
+      color: 'hsl(27 87% 50%)',
+    });
+  }
+
+  if (selectedDomains.includes('Dispatch AI') && selectedDomains.includes('Support AI')) {
+    cards.push({
+      icon: 'shield',
+      value: 'Compound',
+      label: 'Dispatch + Support risk',
+      color: 'hsl(0 84% 45%)',
+    });
+  }
+
+  return cards.slice(0, 4);
+}
+
+const ICON_MAP = {
+  trophy: Trophy,
+  trending: TrendingUp,
+  alert: AlertTriangle,
+  shield: Shield,
+};
+
 export function CapabilityComparison() {
   const { state, dispatch } = useDashboard();
   const { selectedCompanies, selectedDomains, highlightedCompany } = state;
@@ -42,8 +108,8 @@ export function CapabilityComparison() {
     });
   }, [selectedCompanies, selectedDomains]);
 
-  const insights = useMemo(
-    () => getAutoInsights(selectedCompanies, selectedDomains),
+  const insightCards = useMemo(
+    () => getInsightCards(selectedCompanies, selectedDomains),
     [selectedCompanies, selectedDomains]
   );
 
@@ -70,11 +136,41 @@ export function CapabilityComparison() {
         </div>
       </div>
 
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3" data-testid="auto-insights">
+        <AnimatePresence mode="popLayout">
+          {insightCards.map((card, i) => {
+            const Icon = ICON_MAP[card.icon];
+            return (
+              <motion.div
+                key={`${card.icon}-${card.value}`}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                transition={{ delay: i * 0.08, duration: 0.25 }}
+                className="rounded-lg border bg-card p-3 flex items-center gap-3"
+                data-testid={`insight-card-${i}`}
+              >
+                <div
+                  className="w-9 h-9 rounded-md flex items-center justify-center flex-shrink-0"
+                  style={{ backgroundColor: card.color + '18' }}
+                >
+                  <Icon className="w-4 h-4" style={{ color: card.color }} />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-bold leading-tight truncate">{card.value}</p>
+                  <p className="text-[11px] text-muted-foreground leading-tight">{card.label}</p>
+                </div>
+              </motion.div>
+            );
+          })}
+        </AnimatePresence>
+      </div>
+
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">AI Strategic Capability Profile Comparison</CardTitle>
-            <p className="text-sm text-muted-foreground">Radar overlay of capability scores (0-5 scale)</p>
+            <CardTitle className="text-base">Capability Profile</CardTitle>
+            <p className="text-sm text-muted-foreground">Radar overlay (0-5 scale)</p>
           </CardHeader>
           <CardContent>
             <div className="w-full" style={{ height: 380 }}>
@@ -137,8 +233,8 @@ export function CapabilityComparison() {
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">AI Capability Maturity Landscape (1-5 Scale)</CardTitle>
-            <p className="text-sm text-muted-foreground">Heatmap of scores by company and domain</p>
+            <CardTitle className="text-base">Maturity Heatmap</CardTitle>
+            <p className="text-sm text-muted-foreground">Scores by company and domain</p>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
@@ -233,35 +329,6 @@ export function CapabilityComparison() {
           </CardContent>
         </Card>
       </div>
-
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base flex items-center gap-2">
-            <Lightbulb className="w-4 h-4 text-chart-2" />
-            Auto Insights
-          </CardTitle>
-          <p className="text-sm text-muted-foreground">Key findings based on selected companies and domains</p>
-        </CardHeader>
-        <CardContent>
-          <ul className="space-y-2" data-testid="auto-insights">
-            <AnimatePresence mode="popLayout">
-              {insights.map((insight, i) => (
-                <motion.li
-                  key={insight}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 10 }}
-                  transition={{ delay: i * 0.1, duration: 0.3 }}
-                  className="flex items-start gap-2 text-sm"
-                >
-                  <span className="w-1.5 h-1.5 rounded-full bg-chart-2 mt-1.5 flex-shrink-0" />
-                  {insight}
-                </motion.li>
-              ))}
-            </AnimatePresence>
-          </ul>
-        </CardContent>
-      </Card>
     </div>
   );
 }

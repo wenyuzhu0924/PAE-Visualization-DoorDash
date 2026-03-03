@@ -8,10 +8,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
-import { Switch } from '@/components/ui/switch';
 import {
   Radar, LayoutGrid, Target, BookOpen,
-  ChevronLeft, ChevronRight, Maximize, Minimize, Eye,
+  ChevronLeft, ChevronRight, Maximize, Minimize,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DashboardProvider, useDashboard } from '@/lib/DashboardContext';
@@ -44,7 +43,7 @@ function StepContent({ step }: { step: number }) {
 
 function DashboardInner() {
   const { state, dispatch } = useDashboard();
-  const { currentStep, mode, presentationMode, notationVisible } = state;
+  const { currentStep, mode, presentationMode } = state;
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (e.key === 'ArrowRight' || e.key === ' ') {
@@ -200,20 +199,6 @@ function DashboardInner() {
                 </SidebarGroupContent>
               </SidebarGroup>
             )}
-
-            <SidebarGroup>
-              <SidebarGroupContent>
-                <div className="px-3 space-y-2">
-                  <label className="flex items-center justify-between text-xs cursor-pointer" data-testid="toggle-notation">
-                    <span className="flex items-center gap-1.5">
-                      <Eye className="w-3.5 h-3.5" />
-                      Notation Panel
-                    </span>
-                    <Switch checked={notationVisible} onCheckedChange={() => dispatch({ type: 'TOGGLE_NOTATION' })} />
-                  </label>
-                </div>
-              </SidebarGroupContent>
-            </SidebarGroup>
           </SidebarContent>
         </Sidebar>
 
@@ -248,48 +233,6 @@ function DashboardInner() {
               </div>
 
               <StepContent step={currentStep} />
-
-              <AnimatePresence>
-                {notationVisible && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="mt-6 p-4 rounded-md border bg-card text-xs text-muted-foreground space-y-1"
-                    data-testid="notation-panel"
-                  >
-                    <p className="font-semibold text-foreground text-sm mb-2">How to Read This View</p>
-                    {currentStep === 0 && (
-                      <>
-                        <p>Radar chart shows capability profiles on a 1-5 scale. Larger area = broader capability. Heatmap provides the same data in tabular form.</p>
-                        <p>Toggle companies/domains using the chips above. Click a company name to highlight it across both charts.</p>
-                        <p>Scores are derived from competitive analysis of public engineering blogs, investor disclosures, and product documentation.</p>
-                      </>
-                    )}
-                    {currentStep === 1 && (
-                      <>
-                        <p>Matrix shows concrete technologies deployed by each company across AI domains.</p>
-                        <p>Color-coded tags indicate: Status (Live/Pilot), Source (In-house/Partner), and Autonomy (Assistive/Conditional/Autonomous).</p>
-                        <p>Click any cell to see technology details and governance risk notes. Higher autonomy = higher governance requirement.</p>
-                      </>
-                    )}
-                    {currentStep === 2 && (
-                      <>
-                        <p>X-axis = execution authority (assistive to autonomous). Y-axis = stakeholder exposure (low to high).</p>
-                        <p>Top-right quadrant (Critical Risk) requires mandatory controls including exec sign-off and full red-teaming.</p>
-                        <p>Click any point to see auto-classified risk tier and recommended controls based on quadrant position.</p>
-                      </>
-                    )}
-                    {currentStep === 3 && (
-                      <>
-                        <p>Six lifecycle stages with gates (G1-G5) between them. Controls escalate based on autonomy tier and exposure level.</p>
-                        <p>Change the selectors above to see how governance requirements shift. Click any stage or gate for details.</p>
-                        <p>Three control swimlanes show when different control types apply: Build (design-time), Launch (approval), Run (monitoring).</p>
-                      </>
-                    )}
-                  </motion.div>
-                )}
-              </AnimatePresence>
 
               {mode === 'story' && (
                 <div className="flex items-center justify-between mt-6 pt-4 border-t">
