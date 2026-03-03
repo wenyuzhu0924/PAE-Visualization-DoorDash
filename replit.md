@@ -19,12 +19,12 @@ client/src/
   App.tsx                           - Main app with routing
   index.css                         - Dark theme CSS with glass/glow utilities
   lib/
-    data.ts                         - All PAE data (capabilities, tech tags, risk points, lifecycle, risk domain standards, platform metrics, implementation phases, red-team categories)
+    data.ts                         - All PAE data + centralized color constants (TIER_COLORS, RISK_COLORS, STATUS_COLORS, SOURCE_COLORS, STAGE_COLORS_PALETTE, DOMAIN_COLORS_MAP)
     DashboardContext.tsx             - Global state management with localStorage
   pages/
-    Dashboard.tsx                   - Main dashboard layout with sidebar navigation
+    Dashboard.tsx                   - Main dashboard layout with sidebar, StepDots nav, presentation mode
   components/
-    ToggleChips.tsx                  - Reusable company/domain toggle chips with icons
+    ToggleChips.tsx                  - Reusable company/domain toggle chips with icons + glow
     CapabilityComparison.tsx         - Page 1: Industry Landscape - Hero stats, radar chart, rankings, autonomy distribution, heatmap
     CompetitorTechMap.tsx            - Page 2: Technology Stack - Tech matrix grid, source/tier pie charts, system counts
     RiskQuadrant.tsx                 - Page 3: Risk Architecture - 2x2 quadrant, risk weight bar chart, governance standards
@@ -43,21 +43,24 @@ client/src/
 
 ## Visual Design
 
-- **Dark theme by default** (class="dark" on html element)
-- Deep navy/charcoal background (hsl 222 25% 6%) with subtle blue tint
-- Electric blue primary (hsl 199 89% 48%) with cyan/teal accents
-- Glassmorphism cards (`.glass-card` utility) with backdrop blur and subtle borders
-- Glow effects (`.glow-blue`, `.glow-border-*` utilities) for emphasis
-- Gradient text (`.gradient-text`) for headers
-- Subtle dot grid background (`.tech-grid-bg`) on main content area
-- Accent line (`.accent-line`) gradient separator under header
-- Company colors: DoorDash #FF3008, Uber Eats #276EF1, Instacart #43B02A, Grubhub #F97316, Meituan #A855F7
-- Autonomy tiers: Shield icon (Assistive/blue), AlertTriangle (Conditional/orange), Zap (Autonomous/red)
-- 8 domain colors: Brand=purple, Communications=cyan, Public Policy=red, Legal=pink, Insurance=orange, Trust & Safety=crimson, Values Alignment=green, Regulatory=yellow
-- 6 stage colors: S1=cyan, S2=purple, S3=orange, S4=red, S5=green, S6=yellow
-- Font sizing: minimum text-[10px] for smallest labels, text-xs (12px) for primary content, text-sm/text-base for headers
-- Dark scrollbar styling: webkit-scrollbar with dark track/thumb, Firefox scrollbar-color
-- No emoji anywhere; lucide-react icons only
+- **Dark theme only** (class="dark" on html element, deep navy background hsl(220 25% 5%))
+- **Tech keynote aesthetic**: glassmorphism, glow effects, gradient text, icon-emphasized navigation
+- Primary accent: cyan-blue hsl(192 85% 50%)
+- Glassmorphism cards: `.glass-card` (gradient bg + backdrop blur + subtle borders), `.glass-card-elevated` (stronger)
+- Glow effects: `.glow-blue`, `.glow-border-blue/teal/gold/pink/cyan/indigo` utilities
+- Gradient text: `.gradient-text` (blue), `.gradient-text-warm` (cyan-indigo-pink)
+- Dot grid background: `.tech-grid-bg`, accent line: `.accent-line`, `.accent-line-warm`
+- Dark scrollbar styling: 5px thin, dark track/thumb
+- **Centralized semantic color palette** in data.ts:
+  - Company colors: DoorDash #FF3008, Uber Eats #276EF1, Instacart #43B02A, Grubhub #F97316, Meituan #A855F7
+  - TIER_COLORS: Assistive=#14B8A6, Conditional=#EAB308, Autonomous=#EC4899
+  - RISK_COLORS: Critical=#EC4899, Elevated=#EAB308, Operational=#22D3EE, Standard=#14B8A6
+  - STATUS_COLORS: Live=#14B8A6, Pilot=#EAB308
+  - SOURCE_COLORS: In-house=#22D3EE, Partner=#818CF8, Mixed=#FB7185
+  - STAGE_COLORS_PALETTE: 6 colors for lifecycle stages
+  - DOMAIN_COLORS_MAP: 8 colors for governance domains
+- Icons: lucide-react only (no emoji), with drop-shadow glow filters
+- Font sizing: minimum text-[10px] for decorative labels, text-[11px] for content, text-xs+ for headers
 
 ## 4-Page Storyline
 
@@ -71,11 +74,12 @@ client/src/
 - Minimal text, maximum visual communication
 - Graphs and charts are the absolute visual center of each view
 - Dense multi-card grid layouts per page (tech-company keynote aesthetic)
+- All content fits viewport without scrolling (flex flex-col h-full, flex-1 min-h-0)
 - Insight cards show key stats with icons and numbers, not paragraphs
 - Tech map cells use tier icons + colored left borders + status dots
 - Risk quadrant shows controls as chips/badges, not bulleted lists
-- Governance playbook uses progress bars, 2-column detail layout, colored bar swimlanes
-- No "How to Read" panels - views are self-explanatory through visual design
+- Governance playbook uses progress bars, animated rings, colored bar swimlanes
+- Navigation: StepDots with icon + progress bar connectors + expanding active label
 
 ## Data Source
 

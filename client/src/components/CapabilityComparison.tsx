@@ -9,18 +9,18 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { CompanyChips, DomainChips } from './ToggleChips';
 import { useDashboard } from '@/lib/DashboardContext';
 import {
-  COMPANIES, DOMAINS, COMPANY_COLORS,
+  COMPANIES, DOMAINS, COMPANY_COLORS, TIER_COLORS,
   capabilityScores, techTags, platformMetrics,
   type Company, type Domain,
 } from '@/lib/data';
 
 const SCORE_COLORS = [
-  'hsl(217 20% 15%)',
-  'hsl(217 30% 22%)',
-  'hsl(199 50% 28%)',
-  'hsl(199 70% 35%)',
-  'hsl(199 80% 42%)',
-  'hsl(199 89% 48%)',
+  'hsl(220 20% 10%)',
+  'hsl(220 22% 16%)',
+  'hsl(192 40% 22%)',
+  'hsl(190 55% 30%)',
+  'hsl(188 65% 38%)',
+  '#14B8A6',
 ];
 
 function getScoreColor(score: number): string {
@@ -81,10 +81,10 @@ export function CapabilityComparison() {
   }, [selectedCompanies, selectedDomains]);
 
   const heroStats = [
-    { icon: Bot, label: 'Daily AI Interactions', value: platformMetrics.dailyAIInteractions, suffix: '+', color: 'hsl(199 89% 48%)' },
-    { icon: TrendingUp, label: 'Resolution Rate', value: platformMetrics.resolutionRate, suffix: '%', color: 'hsl(142 76% 45%)' },
-    { icon: MessageSquare, label: 'Msgs / Min', value: platformMetrics.messagesPerMinute, suffix: '', color: 'hsl(27 87% 55%)' },
-    { icon: Globe, label: 'Market 2032', value: platformMetrics.marketSize2032, suffix: 'B', prefix: '$', color: 'hsl(280 65% 65%)' },
+    { icon: Bot, label: 'AI Interactions', value: platformMetrics.dailyAIInteractions, suffix: '+', color: '#22D3EE' },
+    { icon: TrendingUp, label: 'Resolution', value: platformMetrics.resolutionRate, suffix: '%', color: '#14B8A6' },
+    { icon: MessageSquare, label: 'Msgs/Min', value: platformMetrics.messagesPerMinute, suffix: '', color: '#EAB308' },
+    { icon: Globe, label: 'Mkt 2032', value: platformMetrics.marketSize2032, suffix: 'B', prefix: '$', color: '#818CF8' },
   ];
 
   return (
@@ -111,16 +111,16 @@ export function CapabilityComparison() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.08, duration: 0.4 }}
-            className="glass-card rounded-lg p-2.5 relative overflow-hidden"
-            style={{ boxShadow: `0 0 20px ${stat.color}08, inset 0 0 0 1px ${stat.color}15` }}
+            className="glass-card rounded-lg p-2 relative overflow-hidden group"
+            style={{ boxShadow: `0 0 24px ${stat.color}06, inset 0 0 0 1px ${stat.color}15` }}
             data-testid={`hero-stat-${i}`}
           >
-            <div className="absolute top-0 right-0 w-16 h-16 opacity-[0.04]" style={{ background: `radial-gradient(circle, ${stat.color}, transparent)` }} />
+            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{ background: `radial-gradient(circle at 50% 0%, ${stat.color}08, transparent 70%)` }} />
             <div className="flex items-center gap-1.5 mb-0.5">
-              <stat.icon className="w-3.5 h-3.5" style={{ color: stat.color }} />
-              <span className="text-[11px] text-muted-foreground uppercase tracking-wider">{stat.label}</span>
+              <stat.icon className="w-3.5 h-3.5" style={{ color: stat.color, filter: `drop-shadow(0 0 4px ${stat.color}60)` }} />
+              <span className="text-[10px] text-muted-foreground/70 uppercase tracking-wider font-medium">{stat.label}</span>
             </div>
-            <p className="text-xl font-bold leading-none" style={{ color: stat.color }}>
+            <p className="text-lg font-bold leading-none" style={{ color: stat.color }}>
               <AnimatedNumber value={stat.value} suffix={stat.suffix} prefix={stat.prefix} />
             </p>
           </motion.div>
@@ -130,21 +130,21 @@ export function CapabilityComparison() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 flex-1 min-h-0">
         <div className="lg:col-span-2 glass-card rounded-xl p-3 glow-border-blue flex flex-col">
           <div className="flex items-center justify-between mb-1 flex-shrink-0">
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Capability Radar</span>
-            <span className="text-[11px] text-muted-foreground font-mono">{selectedCompanies.length} companies / {selectedDomains.length} domains</span>
+            <span className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-widest">Capability Radar</span>
+            <span className="text-[10px] text-muted-foreground/40 font-mono">{selectedCompanies.length}co / {selectedDomains.length}dom</span>
           </div>
-          <div className="w-full flex-1 min-h-0">
+          <div className="w-full flex-1 min-h-0 chart-glow">
             <ResponsiveContainer width="100%" height="100%">
-              <RadarChart data={radarData} cx="50%" cy="50%" outerRadius="72%">
-                <PolarGrid strokeDasharray="3 3" stroke="hsl(217 20% 20%)" />
+              <RadarChart data={radarData} cx="50%" cy="50%" outerRadius="75%">
+                <PolarGrid strokeDasharray="3 3" stroke="hsl(220 20% 16%)" />
                 <PolarAngleAxis
                   dataKey="domain"
-                  tick={{ fill: 'hsl(210 40% 80%)', fontSize: 12, fontWeight: 600 }}
+                  tick={{ fill: 'hsl(210 40% 80%)', fontSize: 11, fontWeight: 600 }}
                 />
                 <PolarRadiusAxis
                   domain={[0, 5]}
                   tickCount={6}
-                  tick={{ fill: 'hsl(215 20% 40%)', fontSize: 10 }}
+                  tick={{ fill: 'hsl(215 20% 35%)', fontSize: 9 }}
                   axisLine={false}
                 />
                 {selectedCompanies.map(company => (
@@ -154,7 +154,7 @@ export function CapabilityComparison() {
                     dataKey={company}
                     stroke={COMPANY_COLORS[company]}
                     fill={COMPANY_COLORS[company]}
-                    fillOpacity={highlightedCompany === company ? 0.4 : highlightedCompany ? 0.05 : 0.15}
+                    fillOpacity={highlightedCompany === company ? 0.45 : highlightedCompany ? 0.04 : 0.18}
                     strokeWidth={highlightedCompany === company ? 3 : highlightedCompany ? 1 : 2}
                     animationDuration={600}
                     animationEasing="ease-out"
@@ -162,11 +162,12 @@ export function CapabilityComparison() {
                 ))}
                 <RechartsTooltip
                   contentStyle={{
-                    backgroundColor: 'hsl(222 22% 11%)',
-                    border: '1px solid hsl(217 20% 20%)',
+                    backgroundColor: 'hsl(220 22% 9%)',
+                    border: '1px solid hsl(220 20% 18%)',
                     borderRadius: 8,
-                    fontSize: 12,
+                    fontSize: 11,
                     color: 'hsl(210 40% 90%)',
+                    boxShadow: '0 8px 32px hsl(0 0% 0% / 0.4)',
                   }}
                 />
               </RadarChart>
@@ -176,13 +177,13 @@ export function CapabilityComparison() {
             {selectedCompanies.map(company => (
               <button
                 key={company}
-                className="flex items-center gap-1.5 text-xs cursor-pointer transition-opacity"
-                style={{ opacity: highlightedCompany && highlightedCompany !== company ? 0.3 : 1 }}
+                className="flex items-center gap-1.5 text-[11px] cursor-pointer transition-opacity"
+                style={{ opacity: highlightedCompany && highlightedCompany !== company ? 0.25 : 1 }}
                 onClick={() => dispatch({ type: 'SET_HIGHLIGHTED', company: highlightedCompany === company ? null : company })}
                 data-testid={`legend-${company.replace(/\s/g, '-')}`}
               >
-                <span className="w-3 h-3 rounded-sm" style={{ backgroundColor: COMPANY_COLORS[company], boxShadow: `0 0 6px ${COMPANY_COLORS[company]}60` }} />
-                <span className="text-muted-foreground">{company}</span>
+                <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: COMPANY_COLORS[company], boxShadow: `0 0 8px ${COMPANY_COLORS[company]}60` }} />
+                <span className="text-muted-foreground/70">{company}</span>
               </button>
             ))}
           </div>
@@ -190,7 +191,7 @@ export function CapabilityComparison() {
 
         <div className="flex flex-col gap-2 min-h-0">
           <div className="glass-card rounded-xl p-3 flex-shrink-0">
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Rankings</span>
+            <span className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-widest">Rankings</span>
             <div className="mt-2 space-y-1.5">
               {companyAvgs.map((c, i) => (
                 <motion.div
@@ -201,13 +202,13 @@ export function CapabilityComparison() {
                   className="flex items-center gap-2"
                   data-testid={`ranking-${i}`}
                 >
-                  <span className="text-[11px] font-mono text-muted-foreground w-5">#{i + 1}</span>
-                  <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: c.color }} />
-                  <span className="text-xs flex-1 truncate">{c.company}</span>
-                  <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ backgroundColor: 'hsl(217 20% 15%)' }}>
+                  <span className="text-[10px] font-mono text-muted-foreground/40 w-4">#{i + 1}</span>
+                  <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: c.color, boxShadow: `0 0 6px ${c.color}50` }} />
+                  <span className="text-xs flex-1 truncate text-muted-foreground/80">{c.company}</span>
+                  <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: 'hsl(220 20% 12%)' }}>
                     <motion.div
                       className="h-full rounded-full"
-                      style={{ backgroundColor: c.color, boxShadow: `0 0 4px ${c.color}60` }}
+                      style={{ backgroundColor: c.color, boxShadow: `0 0 6px ${c.color}60` }}
                       initial={{ width: 0 }}
                       animate={{ width: `${(c.avg / 5) * 100}%` }}
                       transition={{ duration: 0.6, delay: i * 0.08 }}
@@ -220,18 +221,18 @@ export function CapabilityComparison() {
           </div>
 
           <div className="glass-card rounded-xl p-3 flex-1 min-h-0 flex flex-col">
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex-shrink-0">Autonomy Distribution</span>
+            <span className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-widest flex-shrink-0">Autonomy Distribution</span>
             <div className="mt-1 flex-1 min-h-0">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={autonomyDist} layout="vertical" margin={{ left: 0, right: 8, top: 0, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(217 20% 15%)" horizontal={false} />
-                  <XAxis type="number" tick={{ fill: 'hsl(215 20% 45%)', fontSize: 11 }} axisLine={false} tickLine={false} />
-                  <YAxis type="category" dataKey="tier" tick={{ fill: 'hsl(210 40% 80%)', fontSize: 11 }} width={80} axisLine={false} tickLine={false} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(220 20% 12%)" horizontal={false} />
+                  <XAxis type="number" tick={{ fill: 'hsl(215 20% 40%)', fontSize: 10 }} axisLine={false} tickLine={false} />
+                  <YAxis type="category" dataKey="tier" tick={{ fill: 'hsl(210 40% 75%)', fontSize: 10 }} width={80} axisLine={false} tickLine={false} />
                   <Bar dataKey="count" radius={[0, 4, 4, 0]} animationDuration={800}>
                     {autonomyDist.map((entry) => (
                       <Cell
                         key={entry.tier}
-                        fill={entry.tier === 'Autonomous' ? 'hsl(0 84% 55%)' : entry.tier === 'Conditional' ? 'hsl(27 87% 55%)' : 'hsl(199 89% 48%)'}
+                        fill={entry.tier === 'Autonomous' ? TIER_COLORS.Autonomous : entry.tier === 'Conditional' ? TIER_COLORS.Conditional : TIER_COLORS.Assistive}
                       />
                     ))}
                   </Bar>
@@ -241,20 +242,20 @@ export function CapabilityComparison() {
           </div>
 
           <div className="grid grid-cols-3 gap-2 flex-shrink-0">
-            <div className="glass-card rounded-lg p-2.5 text-center" data-testid="stat-leader">
-              <Trophy className="w-4 h-4 mx-auto mb-1" style={{ color: leader?.color }} />
-              <p className="text-xs font-bold truncate" style={{ color: leader?.color }}>{leader?.company}</p>
-              <p className="text-[10px] text-muted-foreground">Leader</p>
+            <div className="glass-card rounded-lg p-2 text-center" data-testid="stat-leader">
+              <Trophy className="w-3.5 h-3.5 mx-auto mb-0.5" style={{ color: leader?.color, filter: `drop-shadow(0 0 4px ${leader?.color}60)` }} />
+              <p className="text-[11px] font-bold truncate" style={{ color: leader?.color }}>{leader?.company}</p>
+              <p className="text-[9px] text-muted-foreground/40">Leader</p>
             </div>
-            <div className="glass-card rounded-lg p-2.5 text-center" data-testid="stat-systems">
-              <Zap className="w-4 h-4 mx-auto mb-1 text-primary" />
-              <p className="text-xs font-bold text-primary">{totalSystems}</p>
-              <p className="text-[10px] text-muted-foreground">Systems</p>
+            <div className="glass-card rounded-lg p-2 text-center" data-testid="stat-systems">
+              <Zap className="w-3.5 h-3.5 mx-auto mb-0.5 text-primary" style={{ filter: 'drop-shadow(0 0 4px hsl(192 85% 50% / 0.5))' }} />
+              <p className="text-[11px] font-bold text-primary">{totalSystems}</p>
+              <p className="text-[9px] text-muted-foreground/40">Systems</p>
             </div>
-            <div className="glass-card rounded-lg p-2.5 text-center" data-testid="stat-latency">
-              <Clock className="w-4 h-4 mx-auto mb-1 text-green-400" />
-              <p className="text-xs font-bold text-green-400">{platformMetrics.avgLatency}s</p>
-              <p className="text-[10px] text-muted-foreground">Latency</p>
+            <div className="glass-card rounded-lg p-2 text-center" data-testid="stat-latency">
+              <Clock className="w-3.5 h-3.5 mx-auto mb-0.5" style={{ color: '#14B8A6', filter: 'drop-shadow(0 0 4px rgba(20,184,166,0.5))' }} />
+              <p className="text-[11px] font-bold" style={{ color: '#14B8A6' }}>{platformMetrics.avgLatency}s</p>
+              <p className="text-[9px] text-muted-foreground/40">Latency</p>
             </div>
           </div>
         </div>
@@ -262,32 +263,36 @@ export function CapabilityComparison() {
 
       <div className="glass-card rounded-xl p-3 flex-shrink-0">
         <div className="flex items-center justify-between mb-1.5">
-          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Score Heatmap</span>
+          <span className="text-[10px] font-semibold text-muted-foreground/50 uppercase tracking-widest">Score Heatmap</span>
           <div className="flex items-center gap-1">
-            <span className="text-[11px] text-muted-foreground mr-1">Low</span>
+            <span className="text-[10px] text-muted-foreground/30 mr-1">Low</span>
             {[1, 2, 3, 4, 5].map(s => (
               <div
                 key={s}
-                className="w-5 h-4 rounded-sm flex items-center justify-center text-[10px] font-bold"
-                style={{ backgroundColor: getScoreColor(s), color: s >= 3 ? '#fff' : 'hsl(210 40% 70%)' }}
+                className="w-5 h-3.5 rounded-sm flex items-center justify-center text-[9px] font-bold"
+                style={{
+                  backgroundColor: getScoreColor(s),
+                  color: s >= 3 ? '#fff' : 'hsl(210 40% 60%)',
+                  boxShadow: s >= 4 ? `0 0 6px ${getScoreColor(s)}40` : 'none',
+                }}
               >
                 {s}
               </div>
             ))}
-            <span className="text-[11px] text-muted-foreground ml-1">High</span>
+            <span className="text-[10px] text-muted-foreground/30 ml-1">High</span>
           </div>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm" data-testid="heatmap-table">
             <thead>
               <tr>
-                <th className="text-left py-1 pr-2 font-medium text-muted-foreground text-xs"></th>
+                <th className="text-left py-1 pr-2 font-medium text-muted-foreground/50 text-[10px]"></th>
                 {selectedDomains.map(domain => (
-                  <th key={domain} className="text-center py-1 px-1 font-medium text-xs text-muted-foreground" style={{ minWidth: 60 }}>
+                  <th key={domain} className="text-center py-1 px-1 font-medium text-[10px] text-muted-foreground/50" style={{ minWidth: 55 }}>
                     {domain.replace(' AI', '').replace('Autonomous ', '')}
                   </th>
                 ))}
-                <th className="text-center py-1 px-1 font-medium text-xs text-muted-foreground">Avg</th>
+                <th className="text-center py-1 px-1 font-medium text-[10px] text-muted-foreground/50">Avg</th>
               </tr>
             </thead>
             <tbody>
@@ -307,10 +312,10 @@ export function CapabilityComparison() {
                       onClick={() => dispatch({ type: 'SET_HIGHLIGHTED', company: isHighlighted ? null : company })}
                       data-testid={`heatmap-row-${company.replace(/\s/g, '-')}`}
                     >
-                      <td className="py-1 pr-2 font-medium text-xs">
+                      <td className="py-1 pr-2 font-medium text-[11px]">
                         <span className="flex items-center gap-1.5">
-                          <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: COMPANY_COLORS[company] }} />
-                          <span className="text-muted-foreground">{company}</span>
+                          <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: COMPANY_COLORS[company], boxShadow: `0 0 4px ${COMPANY_COLORS[company]}40` }} />
+                          <span className="text-muted-foreground/70">{company}</span>
                         </span>
                       </td>
                       {selectedDomains.map(domain => {
@@ -318,12 +323,12 @@ export function CapabilityComparison() {
                         return (
                           <td key={domain} className="text-center py-1 px-1">
                             <motion.div
-                              className="mx-auto rounded flex items-center justify-center font-bold text-xs"
+                              className="mx-auto rounded flex items-center justify-center font-bold text-[11px]"
                               style={{
-                                width: 32, height: 26,
+                                width: 30, height: 24,
                                 backgroundColor: getScoreColor(score),
-                                color: score >= 3 ? '#fff' : 'hsl(210 40% 70%)',
-                                boxShadow: score >= 4 ? `0 0 8px ${getScoreColor(score)}40` : 'none',
+                                color: score >= 3 ? '#fff' : 'hsl(210 40% 60%)',
+                                boxShadow: score >= 4 ? `0 0 10px ${getScoreColor(score)}50` : 'none',
                               }}
                               initial={{ scale: 0.8 }}
                               animate={{ scale: 1 }}
@@ -336,10 +341,10 @@ export function CapabilityComparison() {
                       })}
                       <td className="text-center py-1 px-1">
                         <div
-                          className="mx-auto rounded flex items-center justify-center font-bold text-xs"
+                          className="mx-auto rounded flex items-center justify-center font-bold text-[11px]"
                           style={{
-                            width: 32, height: 26,
-                            border: `1px dashed ${COMPANY_COLORS[company]}50`,
+                            width: 30, height: 24,
+                            border: `1px dashed ${COMPANY_COLORS[company]}40`,
                             color: COMPANY_COLORS[company],
                           }}
                         >

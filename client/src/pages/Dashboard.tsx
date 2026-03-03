@@ -5,12 +5,9 @@ import {
   SidebarProvider, SidebarTrigger,
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import {
   Radar, LayoutGrid, Target, BookOpen,
   ChevronLeft, ChevronRight, Maximize, Minimize,
-  Presentation, Compass,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DashboardProvider, useDashboard } from '@/lib/DashboardContext';
@@ -39,6 +36,69 @@ function StepContent({ step }: { step: number }) {
         {step === 3 && <GovernancePlaybook />}
       </motion.div>
     </AnimatePresence>
+  );
+}
+
+function StepDots({ currentStep, onSelect }: { currentStep: number; onSelect: (i: number) => void }) {
+  return (
+    <div className="flex items-center gap-1" data-testid="step-indicators">
+      {STEPS.map((step, i) => {
+        const Icon = STEP_ICONS[i];
+        const isActive = i === currentStep;
+        const isPast = i < currentStep;
+        return (
+          <button
+            key={i}
+            onClick={() => onSelect(i)}
+            className="flex items-center gap-1 transition-all duration-300"
+            data-testid={`dot-step-${i}`}
+          >
+            {i > 0 && (
+              <div
+                className="h-px transition-all duration-500"
+                style={{
+                  width: 16,
+                  background: isPast
+                    ? 'linear-gradient(90deg, hsl(192 85% 50%), hsl(192 85% 50%))'
+                    : 'hsl(220 20% 18%)',
+                  boxShadow: isPast ? '0 0 4px hsl(192 85% 50% / 0.4)' : 'none',
+                }}
+              />
+            )}
+            <motion.div
+              className="flex items-center gap-1.5 rounded-full px-1.5 py-1 cursor-pointer"
+              style={{
+                backgroundColor: isActive ? 'hsl(192 85% 50% / 0.12)' : 'transparent',
+                boxShadow: isActive ? '0 0 12px hsl(192 85% 50% / 0.2)' : 'none',
+              }}
+              layout
+            >
+              <div
+                className="w-6 h-6 rounded-full flex items-center justify-center transition-all duration-300"
+                style={{
+                  backgroundColor: isActive ? 'hsl(192 85% 50% / 0.2)' : isPast ? 'hsl(192 85% 50% / 0.08)' : 'hsl(220 20% 14%)',
+                  border: isActive ? '1.5px solid hsl(192 85% 50% / 0.5)' : '1px solid hsl(220 20% 18%)',
+                  boxShadow: isActive ? '0 0 8px hsl(192 85% 50% / 0.3)' : 'none',
+                }}
+              >
+                <Icon className="w-3 h-3" style={{ color: isActive ? 'hsl(192 85% 50%)' : isPast ? 'hsl(192 85% 50% / 0.6)' : 'hsl(215 20% 40%)' }} />
+              </div>
+              {isActive && (
+                <motion.span
+                  initial={{ opacity: 0, width: 0 }}
+                  animate={{ opacity: 1, width: 'auto' }}
+                  exit={{ opacity: 0, width: 0 }}
+                  className="text-[11px] font-semibold pr-1.5 whitespace-nowrap"
+                  style={{ color: 'hsl(192 85% 50%)' }}
+                >
+                  {step.title}
+                </motion.span>
+              )}
+            </motion.div>
+          </button>
+        );
+      })}
+    </div>
   );
 }
 
@@ -76,27 +136,26 @@ function DashboardInner() {
   if (presentationMode) {
     return (
       <div className="fixed inset-0 z-50 bg-background flex flex-col">
-        <div className="flex items-center justify-between px-6 py-2.5 border-b border-border/50">
-          <div>
-            <h1 className="text-lg font-bold tracking-tight gradient-text">Agentic AI Governance</h1>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-muted-foreground">{STEPS[currentStep].title}</span>
-            <Badge variant="outline" className="font-mono text-xs no-default-active-elevate border-primary/30 text-primary">{currentStep + 1} / {STEPS.length}</Badge>
-            <Button size="icon" variant="ghost" onClick={() => dispatch({ type: 'TOGGLE_PRESENTATION' })} data-testid="button-exit-presentation">
+        <div className="keynote-header flex items-center justify-between px-6 py-2 border-b border-border/30">
+          <h1 className="text-lg font-bold tracking-tight gradient-text">Agentic AI Governance</h1>
+          <div className="flex items-center gap-4">
+            <StepDots currentStep={currentStep} onSelect={(i) => dispatch({ type: 'SET_STEP', step: i })} />
+            <Button size="icon" variant="ghost" className="w-7 h-7 text-muted-foreground hover:text-primary" onClick={() => dispatch({ type: 'TOGGLE_PRESENTATION' })} data-testid="button-exit-presentation">
               <Minimize className="w-4 h-4" />
             </Button>
           </div>
         </div>
+        <div className="accent-line flex-shrink-0" />
         <div className="flex-1 min-h-0 p-4 tech-grid-bg flex flex-col">
           <div className="max-w-7xl mx-auto w-full flex-1 min-h-0">
             <StepContent step={currentStep} />
           </div>
         </div>
-        <div className="flex items-center justify-between px-6 py-2 border-t border-border/50">
+        <div className="flex items-center justify-between px-6 py-1.5 border-t border-border/30">
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
+            className="text-muted-foreground hover:text-primary"
             onClick={() => dispatch({ type: 'PREV_STEP' })}
             disabled={currentStep === 0}
             data-testid="button-prev-presentation"
@@ -104,26 +163,11 @@ function DashboardInner() {
             <ChevronLeft className="w-4 h-4 mr-1" />
             Back
           </Button>
-          <div className="flex items-center gap-1.5">
-            {STEPS.map((_, i) => (
-              <motion.div
-                key={i}
-                className="cursor-pointer rounded-full transition-all duration-300"
-                style={{
-                  width: i === currentStep ? 24 : 8,
-                  height: 8,
-                  backgroundColor: i === currentStep ? 'hsl(199 89% 48%)' : 'hsl(217 20% 22%)',
-                  boxShadow: i === currentStep ? '0 0 8px hsl(199 89% 48% / 0.5)' : 'none',
-                }}
-                onClick={() => dispatch({ type: 'SET_STEP', step: i })}
-                data-testid={`dot-presentation-step-${i}`}
-                layout
-              />
-            ))}
-          </div>
+          <span className="text-xs font-mono text-muted-foreground/40">{currentStep + 1} / {STEPS.length}</span>
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
+            className="text-muted-foreground hover:text-primary"
             onClick={() => dispatch({ type: 'NEXT_STEP' })}
             disabled={currentStep === STEPS.length - 1}
             data-testid="button-next-presentation"
@@ -137,7 +181,7 @@ function DashboardInner() {
   }
 
   const sidebarStyle = {
-    '--sidebar-width': '14rem',
+    '--sidebar-width': '11rem',
     '--sidebar-width-icon': '3rem',
   };
 
@@ -148,12 +192,15 @@ function DashboardInner() {
           <SidebarContent>
             <SidebarGroup>
               <SidebarGroupContent>
-                <div className="px-3 pt-3 pb-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <div className="w-6 h-6 rounded-md bg-primary/20 flex items-center justify-center glow-border-blue">
-                      <Target className="w-3.5 h-3.5 text-primary" />
+                <div className="px-3 pt-3 pb-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-lg bg-primary/15 flex items-center justify-center glow-border-blue">
+                      <Target className="w-4 h-4 text-primary" />
                     </div>
-                    <span className="text-xs font-bold tracking-wider uppercase text-primary/80">DoorDash PAE</span>
+                    <div className="flex flex-col">
+                      <span className="text-[10px] font-bold tracking-widest uppercase text-primary/70">DoorDash</span>
+                      <span className="text-[9px] text-muted-foreground/50 tracking-wider uppercase">PAE Analysis</span>
+                    </div>
                   </div>
                 </div>
               </SidebarGroupContent>
@@ -175,16 +222,27 @@ function DashboardInner() {
                         >
                           <div className="flex items-center gap-2.5 w-full">
                             <div
-                              className="w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0 transition-all duration-200"
+                              className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-all duration-300"
                               style={{
-                                backgroundColor: isActive ? 'hsl(199 89% 48% / 0.15)' : 'transparent',
-                                boxShadow: isActive ? '0 0 12px hsl(199 89% 48% / 0.2)' : 'none',
+                                backgroundColor: isActive ? 'hsl(192 85% 50% / 0.15)' : 'transparent',
+                                border: isActive ? '1px solid hsl(192 85% 50% / 0.25)' : '1px solid transparent',
+                                boxShadow: isActive ? '0 0 16px hsl(192 85% 50% / 0.15)' : 'none',
                               }}
                             >
-                              <Icon className="w-3.5 h-3.5" style={{ color: isActive ? 'hsl(199 89% 48%)' : undefined }} />
+                              <Icon className="w-4 h-4 transition-colors duration-300" style={{ color: isActive ? 'hsl(192 85% 50%)' : 'hsl(215 20% 40%)' }} />
                             </div>
-                            <span className="text-xs font-medium">{step.title}</span>
+                            <div className="flex flex-col">
+                              <span className="text-xs font-semibold leading-tight">{step.title}</span>
+                              <span className="text-[9px] text-muted-foreground/40">{i + 1} of {STEPS.length}</span>
+                            </div>
                           </div>
+                          {isActive && (
+                            <motion.div
+                              layoutId="nav-active"
+                              className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-6 rounded-full"
+                              style={{ backgroundColor: 'hsl(192 85% 50%)', boxShadow: '0 0 8px hsl(192 85% 50% / 0.5)' }}
+                            />
+                          )}
                         </SidebarMenuButton>
                       </SidebarMenuItem>
                     );
@@ -192,55 +250,22 @@ function DashboardInner() {
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
-
-            <Separator className="mx-3 w-auto opacity-30" />
-
-            <SidebarGroup>
-              <SidebarGroupContent>
-                <div className="px-3 space-y-1.5">
-                  <button
-                    className="flex items-center gap-2 w-full px-2 py-1.5 rounded-md text-xs transition-colors"
-                    style={{
-                      backgroundColor: mode === 'story' ? 'hsl(199 89% 48% / 0.1)' : 'transparent',
-                      color: mode === 'story' ? 'hsl(199 89% 48%)' : undefined,
-                    }}
-                    onClick={() => dispatch({ type: 'SET_MODE', mode: 'story' })}
-                    data-testid="button-story-mode"
-                  >
-                    <Presentation className="w-3.5 h-3.5" />
-                    Story
-                  </button>
-                  <button
-                    className="flex items-center gap-2 w-full px-2 py-1.5 rounded-md text-xs transition-colors"
-                    style={{
-                      backgroundColor: mode === 'explore' ? 'hsl(199 89% 48% / 0.1)' : 'transparent',
-                      color: mode === 'explore' ? 'hsl(199 89% 48%)' : undefined,
-                    }}
-                    onClick={() => dispatch({ type: 'SET_MODE', mode: 'explore' })}
-                    data-testid="button-explore-mode"
-                  >
-                    <Compass className="w-3.5 h-3.5" />
-                    Explore
-                  </button>
-                </div>
-              </SidebarGroupContent>
-            </SidebarGroup>
           </SidebarContent>
         </Sidebar>
 
         <div className="flex flex-col flex-1 min-w-0">
-          <header className="flex items-center justify-between gap-2 px-4 py-1.5 border-b border-border/50 bg-background/80 backdrop-blur-sm flex-shrink-0">
+          <header className="keynote-header flex items-center justify-between gap-2 px-4 py-1.5 border-b border-border/30 flex-shrink-0">
             <div className="flex items-center gap-3">
               <SidebarTrigger data-testid="button-sidebar-toggle" />
               <h1 className="text-base font-bold tracking-tight leading-tight gradient-text">Agentic AI Governance</h1>
+              <span className="text-[10px] text-muted-foreground/30 font-mono tracking-wider uppercase hidden md:block">Harvard Kennedy School</span>
             </div>
             <div className="flex items-center gap-3">
-              <span className="text-sm text-muted-foreground">{STEPS[currentStep].title}</span>
-              <Badge variant="outline" className="font-mono text-xs no-default-active-elevate border-primary/30 text-primary">{currentStep + 1} / {STEPS.length}</Badge>
+              <StepDots currentStep={currentStep} onSelect={(i) => dispatch({ type: 'SET_STEP', step: i })} />
               <Button
-                variant="outline"
+                variant="ghost"
                 size="icon"
-                className="border-primary/30 text-primary hover:bg-primary/10 w-7 h-7"
+                className="text-muted-foreground/50 hover:text-primary w-7 h-7"
                 onClick={() => dispatch({ type: 'TOGGLE_PRESENTATION' })}
                 data-testid="button-presentation-mode"
               >
@@ -257,11 +282,11 @@ function DashboardInner() {
               </div>
 
               {mode === 'story' && (
-                <div className="flex items-center justify-between pt-1.5 border-t border-border/30 flex-shrink-0">
+                <div className="flex items-center justify-between pt-1 flex-shrink-0">
                   <Button
-                    variant="outline"
+                    variant="ghost"
                     size="sm"
-                    className="border-border/50"
+                    className="text-muted-foreground/50 hover:text-primary"
                     onClick={() => dispatch({ type: 'PREV_STEP' })}
                     disabled={currentStep === 0}
                     data-testid="button-prev"
@@ -269,27 +294,11 @@ function DashboardInner() {
                     <ChevronLeft className="w-4 h-4 mr-1" />
                     Back
                   </Button>
-                  <div className="flex items-center gap-1.5">
-                    {STEPS.map((_, i) => (
-                      <motion.div
-                        key={i}
-                        className="cursor-pointer rounded-full transition-all duration-300"
-                        style={{
-                          width: i === currentStep ? 24 : 8,
-                          height: 8,
-                          backgroundColor: i === currentStep ? 'hsl(199 89% 48%)' : 'hsl(217 20% 22%)',
-                          boxShadow: i === currentStep ? '0 0 8px hsl(199 89% 48% / 0.5)' : 'none',
-                        }}
-                        onClick={() => dispatch({ type: 'SET_STEP', step: i })}
-                        data-testid={`dot-step-${i}`}
-                        layout
-                      />
-                    ))}
-                  </div>
+                  <span className="text-[10px] font-mono text-muted-foreground/30">{currentStep + 1} / {STEPS.length}</span>
                   <Button
-                    variant="outline"
+                    variant="ghost"
                     size="sm"
-                    className="border-border/50"
+                    className="text-muted-foreground/50 hover:text-primary"
                     onClick={() => dispatch({ type: 'NEXT_STEP' })}
                     disabled={currentStep === STEPS.length - 1}
                     data-testid="button-next"

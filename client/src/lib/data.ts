@@ -12,6 +12,50 @@ export const COMPANY_COLORS: Record<Company, string> = {
   Meituan: '#A855F7',
 };
 
+export const TIER_COLORS = {
+  Assistive: '#14B8A6',
+  Conditional: '#EAB308',
+  Autonomous: '#EC4899',
+} as const;
+
+export const RISK_COLORS = {
+  Standard: '#14B8A6',
+  Operational: '#22D3EE',
+  Elevated: '#EAB308',
+  Critical: '#EC4899',
+} as const;
+
+export const STATUS_COLORS = {
+  Live: '#14B8A6',
+  Pilot: '#EAB308',
+} as const;
+
+export const SOURCE_COLORS = {
+  'In-house': '#22D3EE',
+  Partner: '#818CF8',
+  Mixed: '#EC4899',
+} as const;
+
+export const STAGE_COLORS_PALETTE = [
+  '#22D3EE',
+  '#818CF8',
+  '#EAB308',
+  '#EC4899',
+  '#14B8A6',
+  '#FB7185',
+] as const;
+
+export const DOMAIN_COLORS_MAP: Record<string, string> = {
+  Brand: '#818CF8',
+  Communications: '#22D3EE',
+  'Public Policy': '#EC4899',
+  Legal: '#A78BFA',
+  Insurance: '#EAB308',
+  'Trust & Safety': '#FB7185',
+  'Values Alignment': '#14B8A6',
+  Regulatory: '#FBBF24',
+};
+
 export const capabilityScores: Record<Company, Record<Domain, number>> = {
   DoorDash: { 'Consumer AI': 3, 'Merchant AI': 5, 'Dispatch AI': 5, 'Support AI': 5, 'Autonomous Hardware': 5 },
   'Uber Eats': { 'Consumer AI': 5, 'Merchant AI': 4, 'Dispatch AI': 5, 'Support AI': 4, 'Autonomous Hardware': 4 },
