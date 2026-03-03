@@ -1,0 +1,192 @@
+Build a beautiful, professional, animated interactive presentation dashboard (web app) for my thesis on DoorDash agentic AI governance. The dashboard must be crisp, high-clarity, projector-ready (use SVG or an equivalent rendering that keeps text sharp). Use a clean consulting/slide aesthetic, smooth micro-animations, and no hover-only critical information.
+
+Core goals
+
+I will present from this dashboard live.
+
+Viewers should understand the story without guessing what the chart means.
+
+Users can interact by selecting companies/domains, switching views, and seeing the narrative update.
+
+Layout + design requirements
+
+A modern presentation layout: left navigation (story steps) + main canvas.
+
+A top bar with title + subtitle and a Presentation Mode toggle (full screen, hides controls).
+
+Typography large enough for projection; consistent spacing; no overlapping labels.
+
+Polished animation: smooth transitions between story steps, animated chart updates (enter/exit), subtle card shadows, and responsive layout.
+
+A persistent “Notation / How to read” panel that is always visible or collapsible (no hidden definitions).
+
+Modes
+
+Story Mode: guided sequence with Next/Back buttons and a progress indicator.
+
+Explore Mode: free navigation among modules.
+
+Persist user edits (selected companies/domains and layout) in localStorage.
+
+Visualizations to include (all interactive)
+Step 1: Capability Comparison (Radar + Heatmap)
+
+Include two linked charts:
+
+Radar chart: “AI Strategic Capability Profile Comparison”
+
+Heatmap: “AI Capability Maturity Landscape (1–5 Scale)”
+
+Interactivity:
+
+Toggle chips to add/remove companies: DoorDash, Uber Eats, Instacart, Grubhub, Meituan.
+
+Toggle chips to add/remove domains: Consumer AI, Merchant AI, Dispatch AI, Support AI, Autonomous Hardware.
+
+Clicking a company highlights it across BOTH charts.
+
+Animated transitions when toggles change.
+
+Add an “Auto Insights” box that updates live:
+
+3–5 short bullets summarizing biggest gaps, leaders by domain, and what that implies for governance.
+
+Step 2: Competitor Technology Map (explicit “who uses what”)
+
+Create a matrix view:
+
+Rows = companies (same set as above)
+
+Columns = capability domains (same set as above)
+
+Each cell shows concrete tech tags (short labels) and status indicators:
+
+In-house vs Partner
+
+Live vs Pilot
+
+Autonomy tier (Assistive / Conditional / Autonomous)
+
+Interactivity:
+
+Toggle companies/domains on/off (chips).
+
+Clicking a cell opens a side panel with:
+
+Tech tag explanation (short)
+
+Why it matters (risk/externality note)
+
+Provide a clear legend and “How to read this chart” box (always visible).
+
+Add a “Presenter Notes” automation button:
+
+Generates concise talking points for the currently selected companies/domains.
+
+Step 3: Risk Prioritization Quadrant
+
+Include the AI Governance Risk Prioritization Framework (2×2 quadrant):
+
+X axis = execution authority (assistive → autonomous)
+
+Y axis = stakeholder exposure (low → high)
+
+Plot labeled points (DoorDash vs competitor items) as capsules.
+
+Interactivity:
+
+Drag points to reposition (optional) or adjust via side panel.
+
+Toggle DoorDash vs competitor layers.
+
+Show callout box “Mandatory Controls” and allow toggling it on/off.
+
+Keep quadrant definitions and axis semantics clearly readable (no hover required).
+
+Add automation:
+
+“Auto-classify risk tier” for a selected point (based on quadrant position) and display recommended controls.
+
+Step 4: Governance Lifecycle Playbook (Tab 2 must be strong)
+
+Visualize the governance lifecycle as a Stage-Gated Playbook Board (better than hourglass):
+
+6 sequential stages as cards:
+
+Use-case selection
+
+Agent specification
+
+Workflow design + autonomy tiering
+
+Testing + red-teaming
+
+Pilot deployment
+
+Scaling + autonomy expansion
+
+Add Gates G1–G5 between stages with short meanings and clear criteria.
+
+Add 3 swimlanes/bands under the pipeline to show control types over time:
+
+Build controls (design-time)
+
+Launch controls (approval/gates)
+
+Run controls (monitoring/incident response)
+
+Interactivity:
+
+Clicking a stage shows an editable panel:
+
+Purpose (1–2 lines)
+
+Required deliverables checklist
+
+Mandatory controls
+
+Common failure modes
+
+Clicking a gate shows:
+
+Go/No-Go criteria
+
+Required sign-offs
+
+Required evidence
+
+Control escalation (key narrative):
+
+Add selectors at top: Autonomy tier (Assistive/Conditional/Autonomous) and Exposure level (Low/High).
+
+When changed, the board updates:
+
+Which controls become mandatory at each stage
+
+Which gates require exec sign-off
+
+Monitoring intensity after launch
+
+Automations:
+
+“Auto-populate controls for selected tier”
+
+“Run readiness check” (highlights missing deliverables and blocks gate)
+
+“Generate presenter script for this lifecycle” (5–7 bullets)
+
+Data + editing
+
+Store all content in a simple JSON schema inside the app.
+
+Provide a minimal editor (side panel) to modify labels, tags, and descriptions.
+
+Ensure defaults look complete and presentation-ready.
+
+Implementation notes (don’t overcomplicate)
+
+Prioritize clarity, smooth animation, and a polished look.
+
+Use whichever frontend stack you consider best for interactive charts and animations.
+
+No need for export/download features.
