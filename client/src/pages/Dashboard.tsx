@@ -8,9 +8,11 @@ import { Button } from '@/components/ui/button';
 import {
   Radar, LayoutGrid, Target, BookOpen,
   ChevronLeft, ChevronRight, Maximize, Minimize,
+  Sun, Moon,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DashboardProvider, useDashboard } from '@/lib/DashboardContext';
+import { useThemeColors } from '@/lib/themeColors';
 import { STEPS } from '@/lib/data';
 import { CapabilityComparison } from '@/components/CapabilityComparison';
 import { CompetitorTechMap } from '@/components/CompetitorTechMap';
@@ -40,6 +42,7 @@ function StepContent({ step }: { step: number }) {
 }
 
 function StepDots({ currentStep, onSelect }: { currentStep: number; onSelect: (i: number) => void }) {
+  const tc = useThemeColors();
   return (
     <div className="flex items-center gap-1" data-testid="step-indicators">
       {STEPS.map((step, i) => {
@@ -58,30 +61,28 @@ function StepDots({ currentStep, onSelect }: { currentStep: number; onSelect: (i
                 className="h-px transition-all duration-500"
                 style={{
                   width: 16,
-                  background: isPast
-                    ? 'linear-gradient(90deg, hsl(192 85% 50%), hsl(192 85% 50%))'
-                    : 'hsl(220 20% 18%)',
-                  boxShadow: isPast ? '0 0 4px hsl(192 85% 50% / 0.4)' : 'none',
+                  background: isPast ? tc.dotConnectorActive : tc.dotConnector,
+                  boxShadow: isPast ? tc.dotConnectorGlow : 'none',
                 }}
               />
             )}
             <motion.div
               className="flex items-center gap-1.5 rounded-full px-1.5 py-1 cursor-pointer"
               style={{
-                backgroundColor: isActive ? 'hsl(192 85% 50% / 0.12)' : 'transparent',
-                boxShadow: isActive ? '0 0 12px hsl(192 85% 50% / 0.2)' : 'none',
+                backgroundColor: isActive ? tc.dotActiveBg : 'transparent',
+                boxShadow: isActive ? tc.dotActiveGlow : 'none',
               }}
               layout
             >
               <div
                 className="w-6 h-6 rounded-full flex items-center justify-center transition-all duration-300"
                 style={{
-                  backgroundColor: isActive ? 'hsl(192 85% 50% / 0.2)' : isPast ? 'hsl(192 85% 50% / 0.08)' : 'hsl(220 20% 14%)',
-                  border: isActive ? '1.5px solid hsl(192 85% 50% / 0.5)' : '1px solid hsl(220 20% 18%)',
-                  boxShadow: isActive ? '0 0 8px hsl(192 85% 50% / 0.3)' : 'none',
+                  backgroundColor: isActive ? tc.dotActiveDotBg : isPast ? tc.dotPastDotBg : tc.dotInactiveDotBg,
+                  border: isActive ? tc.dotActiveDotBorder : tc.dotInactiveDotBorder,
+                  boxShadow: isActive ? tc.dotActiveDotGlow : 'none',
                 }}
               >
-                <Icon className="w-3 h-3" style={{ color: isActive ? 'hsl(192 85% 50%)' : isPast ? 'hsl(192 85% 50% / 0.6)' : 'hsl(215 20% 40%)' }} />
+                <Icon className="w-3 h-3" style={{ color: isActive ? tc.dotActiveIcon : isPast ? tc.dotPastIcon : tc.dotInactiveIcon }} />
               </div>
               {isActive && (
                 <motion.span
@@ -89,7 +90,7 @@ function StepDots({ currentStep, onSelect }: { currentStep: number; onSelect: (i
                   animate={{ opacity: 1, width: 'auto' }}
                   exit={{ opacity: 0, width: 0 }}
                   className="text-[11px] font-semibold pr-1.5 whitespace-nowrap"
-                  style={{ color: 'hsl(192 85% 50%)' }}
+                  style={{ color: tc.dotActiveLabel }}
                 >
                   {step.title}
                 </motion.span>
@@ -102,9 +103,26 @@ function StepDots({ currentStep, onSelect }: { currentStep: number; onSelect: (i
   );
 }
 
+function ThemeToggle() {
+  const { state, dispatch } = useDashboard();
+  const isDark = state.theme === 'dark';
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      className="w-7 h-7 text-muted-foreground/50 hover:text-primary"
+      onClick={() => dispatch({ type: 'TOGGLE_THEME' })}
+      data-testid="button-theme-toggle"
+    >
+      {isDark ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
+    </Button>
+  );
+}
+
 function DashboardInner() {
   const { state, dispatch } = useDashboard();
   const { currentStep, mode, presentationMode } = state;
+  const tc = useThemeColors();
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (e.key === 'ArrowRight' || e.key === ' ') {
@@ -140,6 +158,7 @@ function DashboardInner() {
           <h1 className="text-lg font-bold tracking-tight gradient-text">Agentic AI Governance</h1>
           <div className="flex items-center gap-4">
             <StepDots currentStep={currentStep} onSelect={(i) => dispatch({ type: 'SET_STEP', step: i })} />
+            <ThemeToggle />
             <Button size="icon" variant="ghost" className="w-7 h-7 text-muted-foreground hover:text-primary" onClick={() => dispatch({ type: 'TOGGLE_PRESENTATION' })} data-testid="button-exit-presentation">
               <Minimize className="w-4 h-4" />
             </Button>
@@ -194,11 +213,11 @@ function DashboardInner() {
               <SidebarGroupContent>
                 <div className="px-3 pt-3 pb-2">
                   <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-lg bg-primary/15 flex items-center justify-center glow-border-blue">
-                      <Target className="w-4 h-4 text-primary" />
+                    <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: tc.primaryMuted, boxShadow: tc.isDark ? 'inset 0 0 0 1px hsl(192 85% 50% / 0.2), 0 0 20px hsl(192 85% 50% / 0.08)' : '0 1px 4px hsl(0 0% 0% / 0.06)' }}>
+                      <Target className="w-4 h-4" style={{ color: tc.primary }} />
                     </div>
                     <div className="flex flex-col">
-                      <span className="text-[10px] font-bold tracking-widest uppercase text-primary/70">DoorDash</span>
+                      <span className="text-[10px] font-bold tracking-widest uppercase" style={{ color: tc.primary }}>DoorDash</span>
                       <span className="text-[9px] text-muted-foreground/50 tracking-wider uppercase">PAE Analysis</span>
                     </div>
                   </div>
@@ -224,12 +243,12 @@ function DashboardInner() {
                             <div
                               className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-all duration-300"
                               style={{
-                                backgroundColor: isActive ? 'hsl(192 85% 50% / 0.15)' : 'transparent',
-                                border: isActive ? '1px solid hsl(192 85% 50% / 0.25)' : '1px solid transparent',
-                                boxShadow: isActive ? '0 0 16px hsl(192 85% 50% / 0.15)' : 'none',
+                                backgroundColor: isActive ? tc.navActiveBg : 'transparent',
+                                border: isActive ? tc.navActiveBorder : '1px solid transparent',
+                                boxShadow: isActive ? tc.navActiveGlow : 'none',
                               }}
                             >
-                              <Icon className="w-4 h-4 transition-colors duration-300" style={{ color: isActive ? 'hsl(192 85% 50%)' : 'hsl(215 20% 40%)' }} />
+                              <Icon className="w-4 h-4 transition-colors duration-300" style={{ color: isActive ? tc.navIconActive : tc.navIconInactive }} />
                             </div>
                             <div className="flex flex-col">
                               <span className="text-xs font-semibold leading-tight">{step.title}</span>
@@ -240,7 +259,7 @@ function DashboardInner() {
                             <motion.div
                               layoutId="nav-active"
                               className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-6 rounded-full"
-                              style={{ backgroundColor: 'hsl(192 85% 50%)', boxShadow: '0 0 8px hsl(192 85% 50% / 0.5)' }}
+                              style={{ backgroundColor: tc.activeBarColor, boxShadow: tc.activeBarGlow }}
                             />
                           )}
                         </SidebarMenuButton>
@@ -262,6 +281,7 @@ function DashboardInner() {
             </div>
             <div className="flex items-center gap-3">
               <StepDots currentStep={currentStep} onSelect={(i) => dispatch({ type: 'SET_STEP', step: i })} />
+              <ThemeToggle />
               <Button
                 variant="ghost"
                 size="icon"

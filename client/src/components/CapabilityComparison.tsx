@@ -8,13 +8,14 @@ import { Trophy, TrendingUp, Zap, Bot, MessageSquare, Clock, Globe } from 'lucid
 import { motion, AnimatePresence } from 'framer-motion';
 import { CompanyChips, DomainChips } from './ToggleChips';
 import { useDashboard } from '@/lib/DashboardContext';
+import { useThemeColors } from '@/lib/themeColors';
 import {
   COMPANIES, DOMAINS, COMPANY_COLORS, TIER_COLORS,
   capabilityScores, techTags, platformMetrics,
   type Company, type Domain,
 } from '@/lib/data';
 
-const SCORE_COLORS = [
+const SCORE_COLORS_DARK = [
   'hsl(220 20% 10%)',
   'hsl(220 22% 16%)',
   'hsl(192 40% 22%)',
@@ -23,8 +24,18 @@ const SCORE_COLORS = [
   '#14B8A6',
 ];
 
-function getScoreColor(score: number): string {
-  return SCORE_COLORS[Math.min(score, 5)];
+const SCORE_COLORS_LIGHT = [
+  'hsl(0 0% 95%)',
+  'hsl(0 0% 88%)',
+  'hsl(10 50% 78%)',
+  'hsl(10 65% 65%)',
+  'hsl(10 80% 55%)',
+  '#FF3008',
+];
+
+function getScoreColor(score: number, isDark: boolean): string {
+  const palette = isDark ? SCORE_COLORS_DARK : SCORE_COLORS_LIGHT;
+  return palette[Math.min(score, 5)];
 }
 
 function AnimatedNumber({ value, suffix = '', prefix = '' }: { value: number; suffix?: string; prefix?: string }) {
@@ -43,6 +54,7 @@ function AnimatedNumber({ value, suffix = '', prefix = '' }: { value: number; su
 export function CapabilityComparison() {
   const { state, dispatch } = useDashboard();
   const { selectedCompanies, selectedDomains, highlightedCompany } = state;
+  const tc = useThemeColors();
 
   const radarData = useMemo(() => {
     return selectedDomains.map(domain => {
@@ -136,15 +148,15 @@ export function CapabilityComparison() {
           <div className="w-full flex-1 min-h-0 chart-glow">
             <ResponsiveContainer width="100%" height="100%">
               <RadarChart data={radarData} cx="50%" cy="50%" outerRadius="75%">
-                <PolarGrid strokeDasharray="3 3" stroke="hsl(220 20% 16%)" />
+                <PolarGrid strokeDasharray="3 3" stroke={tc.chartGridStroke} />
                 <PolarAngleAxis
                   dataKey="domain"
-                  tick={{ fill: 'hsl(210 40% 80%)', fontSize: 11, fontWeight: 600 }}
+                  tick={{ fill: tc.chartAxisTick, fontSize: 11, fontWeight: 600 }}
                 />
                 <PolarRadiusAxis
                   domain={[0, 5]}
                   tickCount={6}
-                  tick={{ fill: 'hsl(215 20% 35%)', fontSize: 9 }}
+                  tick={{ fill: tc.chartAxisTickMuted, fontSize: 9 }}
                   axisLine={false}
                 />
                 {selectedCompanies.map(company => (
@@ -162,12 +174,12 @@ export function CapabilityComparison() {
                 ))}
                 <RechartsTooltip
                   contentStyle={{
-                    backgroundColor: 'hsl(220 22% 9%)',
-                    border: '1px solid hsl(220 20% 18%)',
+                    backgroundColor: tc.tooltipBg,
+                    border: tc.tooltipBorder,
                     borderRadius: 8,
                     fontSize: 11,
-                    color: 'hsl(210 40% 90%)',
-                    boxShadow: '0 8px 32px hsl(0 0% 0% / 0.4)',
+                    color: tc.tooltipColor,
+                    boxShadow: tc.tooltipShadow,
                   }}
                 />
               </RadarChart>
@@ -205,7 +217,7 @@ export function CapabilityComparison() {
                   <span className="text-[10px] font-mono text-muted-foreground/40 w-4">#{i + 1}</span>
                   <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: c.color, boxShadow: `0 0 6px ${c.color}50` }} />
                   <span className="text-xs flex-1 truncate text-muted-foreground/80">{c.company}</span>
-                  <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: 'hsl(220 20% 12%)' }}>
+                  <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: tc.barTrackBg }}>
                     <motion.div
                       className="h-full rounded-full"
                       style={{ backgroundColor: c.color, boxShadow: `0 0 6px ${c.color}60` }}
@@ -225,9 +237,9 @@ export function CapabilityComparison() {
             <div className="mt-1 flex-1 min-h-0">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={autonomyDist} layout="vertical" margin={{ left: 0, right: 8, top: 0, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(220 20% 12%)" horizontal={false} />
-                  <XAxis type="number" tick={{ fill: 'hsl(215 20% 40%)', fontSize: 10 }} axisLine={false} tickLine={false} />
-                  <YAxis type="category" dataKey="tier" tick={{ fill: 'hsl(210 40% 75%)', fontSize: 10 }} width={80} axisLine={false} tickLine={false} />
+                  <CartesianGrid strokeDasharray="3 3" stroke={tc.barTrackBg} horizontal={false} />
+                  <XAxis type="number" tick={{ fill: tc.chartAxisTickMuted, fontSize: 10 }} axisLine={false} tickLine={false} />
+                  <YAxis type="category" dataKey="tier" tick={{ fill: tc.chartAxisTick, fontSize: 10 }} width={80} axisLine={false} tickLine={false} />
                   <Bar dataKey="count" radius={[0, 4, 4, 0]} animationDuration={800}>
                     {autonomyDist.map((entry) => (
                       <Cell
@@ -248,7 +260,7 @@ export function CapabilityComparison() {
               <p className="text-[9px] text-muted-foreground/40">Leader</p>
             </div>
             <div className="glass-card rounded-lg p-2 text-center" data-testid="stat-systems">
-              <Zap className="w-3.5 h-3.5 mx-auto mb-0.5 text-primary" style={{ filter: 'drop-shadow(0 0 4px hsl(192 85% 50% / 0.5))' }} />
+              <Zap className="w-3.5 h-3.5 mx-auto mb-0.5 text-primary" style={{ filter: tc.primaryFilterGlow }} />
               <p className="text-[11px] font-bold text-primary">{totalSystems}</p>
               <p className="text-[9px] text-muted-foreground/40">Systems</p>
             </div>
@@ -271,9 +283,9 @@ export function CapabilityComparison() {
                 key={s}
                 className="w-5 h-3.5 rounded-sm flex items-center justify-center text-[9px] font-bold"
                 style={{
-                  backgroundColor: getScoreColor(s),
-                  color: s >= 3 ? '#fff' : 'hsl(210 40% 60%)',
-                  boxShadow: s >= 4 ? `0 0 6px ${getScoreColor(s)}40` : 'none',
+                  backgroundColor: getScoreColor(s, tc.isDark),
+                  color: s >= 3 ? '#fff' : tc.scoreLowText,
+                  boxShadow: s >= 4 ? `0 0 6px ${getScoreColor(s, tc.isDark)}40` : 'none',
                 }}
               >
                 {s}
@@ -326,9 +338,9 @@ export function CapabilityComparison() {
                               className="mx-auto rounded flex items-center justify-center font-bold text-[11px]"
                               style={{
                                 width: 30, height: 24,
-                                backgroundColor: getScoreColor(score),
-                                color: score >= 3 ? '#fff' : 'hsl(210 40% 60%)',
-                                boxShadow: score >= 4 ? `0 0 10px ${getScoreColor(score)}50` : 'none',
+                                backgroundColor: getScoreColor(score, tc.isDark),
+                                color: score >= 3 ? '#fff' : tc.scoreLowText,
+                                boxShadow: score >= 4 ? `0 0 10px ${getScoreColor(score, tc.isDark)}50` : 'none',
                               }}
                               initial={{ scale: 0.8 }}
                               animate={{ scale: 1 }}

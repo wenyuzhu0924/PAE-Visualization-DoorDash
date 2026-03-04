@@ -1,0 +1,52 @@
+import { useDashboard } from './DashboardContext';
+
+export function useThemeColors() {
+  const { state } = useDashboard();
+  const isDark = state.theme === 'dark';
+
+  return {
+    isDark,
+    primary: isDark ? 'hsl(192 85% 50%)' : '#FF3008',
+    primaryMuted: isDark ? 'hsl(192 85% 50% / 0.15)' : 'hsl(10 90% 50% / 0.08)',
+    primaryBorder: isDark ? 'hsl(192 85% 50% / 0.25)' : 'hsl(10 90% 50% / 0.15)',
+    primaryGlow: isDark ? '0 0 16px hsl(192 85% 50% / 0.15)' : 'none',
+    primaryFilterGlow: isDark ? 'drop-shadow(0 0 4px hsl(192 85% 50% / 0.5))' : 'none',
+    activeBarColor: isDark ? 'hsl(192 85% 50%)' : '#FF3008',
+    activeBarGlow: isDark ? '0 0 8px hsl(192 85% 50% / 0.5)' : 'none',
+    navActiveBg: isDark ? 'hsl(192 85% 50% / 0.15)' : 'hsl(10 90% 50% / 0.06)',
+    navActiveBorder: isDark ? '1px solid hsl(192 85% 50% / 0.25)' : '1px solid hsl(10 90% 50% / 0.12)',
+    navActiveGlow: isDark ? '0 0 16px hsl(192 85% 50% / 0.15)' : '0 0 8px hsl(10 90% 50% / 0.06)',
+    navIconActive: isDark ? 'hsl(192 85% 50%)' : '#FF3008',
+    navIconInactive: isDark ? 'hsl(215 20% 40%)' : 'hsl(0 0% 55%)',
+    dotConnector: isDark ? 'hsl(220 20% 18%)' : 'hsl(0 0% 88%)',
+    dotConnectorActive: isDark ? 'linear-gradient(90deg, hsl(192 85% 50%), hsl(192 85% 50%))' : 'linear-gradient(90deg, #FF3008, #FF3008)',
+    dotConnectorGlow: isDark ? '0 0 4px hsl(192 85% 50% / 0.4)' : 'none',
+    dotActiveBg: isDark ? 'hsl(192 85% 50% / 0.12)' : 'hsl(10 90% 50% / 0.06)',
+    dotActiveGlow: isDark ? '0 0 12px hsl(192 85% 50% / 0.2)' : '0 0 6px hsl(10 90% 50% / 0.08)',
+    dotActiveDotBg: isDark ? 'hsl(192 85% 50% / 0.2)' : 'hsl(10 90% 50% / 0.08)',
+    dotActiveDotBorder: isDark ? '1.5px solid hsl(192 85% 50% / 0.5)' : '1.5px solid hsl(10 90% 50% / 0.2)',
+    dotActiveDotGlow: isDark ? '0 0 8px hsl(192 85% 50% / 0.3)' : 'none',
+    dotPastDotBg: isDark ? 'hsl(192 85% 50% / 0.08)' : 'hsl(10 90% 50% / 0.04)',
+    dotInactiveDotBg: isDark ? 'hsl(220 20% 14%)' : 'hsl(0 0% 92%)',
+    dotInactiveDotBorder: isDark ? '1px solid hsl(220 20% 18%)' : '1px solid hsl(0 0% 86%)',
+    dotActiveLabel: isDark ? 'hsl(192 85% 50%)' : '#FF3008',
+    dotActiveIcon: isDark ? 'hsl(192 85% 50%)' : '#FF3008',
+    dotPastIcon: isDark ? 'hsl(192 85% 50% / 0.6)' : 'hsl(10 90% 50% / 0.4)',
+    dotInactiveIcon: isDark ? 'hsl(215 20% 40%)' : 'hsl(0 0% 60%)',
+    sidebarLogoPrimary: isDark ? 'text-primary/70' : 'text-[#FF3008]',
+    chartGridStroke: isDark ? 'hsl(220 20% 16%)' : 'hsl(0 0% 90%)',
+    chartAxisTick: isDark ? 'hsl(210 40% 80%)' : 'hsl(0 0% 35%)',
+    chartAxisTickMuted: isDark ? 'hsl(215 20% 35%)' : 'hsl(0 0% 55%)',
+    chartAxisTickDomain: isDark ? 'hsl(210 40% 65%)' : 'hsl(0 0% 40%)',
+    tooltipBg: isDark ? 'hsl(220 22% 9%)' : 'hsl(0 0% 100%)',
+    tooltipBorder: isDark ? '1px solid hsl(220 20% 18%)' : '1px solid hsl(0 0% 88%)',
+    tooltipColor: isDark ? 'hsl(210 40% 90%)' : 'hsl(0 0% 20%)',
+    tooltipShadow: isDark ? '0 8px 32px hsl(0 0% 0% / 0.4)' : '0 8px 24px hsl(0 0% 0% / 0.12)',
+    svgBg: isDark ? 'hsl(220 20% 16%)' : 'hsl(0 0% 90%)',
+    svgDash: isDark ? 'hsl(220 20% 18%)' : 'hsl(0 0% 88%)',
+    svgAxisLabel: isDark ? 'hsl(210 40% 60%)' : 'hsl(0 0% 45%)',
+    barTrackBg: isDark ? 'hsl(220 20% 12%)' : 'hsl(0 0% 92%)',
+    scoreLowText: isDark ? 'hsl(210 40% 60%)' : 'hsl(0 0% 55%)',
+    heatmapLow: isDark ? 'hsl(220 20% 10%)' : 'hsl(0 0% 97%)',
+  };
+}

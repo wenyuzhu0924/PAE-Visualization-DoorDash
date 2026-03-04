@@ -1,6 +1,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Users, ShoppingBag, Truck, Headphones, Cpu } from 'lucide-react';
 import { COMPANY_COLORS, type Company, type Domain } from '@/lib/data';
+import { useThemeColors } from '@/lib/themeColors';
 
 interface CompanyChipsProps {
   companies: readonly Company[];
@@ -11,6 +12,7 @@ interface CompanyChipsProps {
 }
 
 export function CompanyChips({ companies, selected, onToggle, highlighted, onHighlight }: CompanyChipsProps) {
+  const tc = useThemeColors();
   return (
     <div className="flex flex-wrap gap-1" data-testid="company-chips">
       {companies.map(company => {
@@ -25,8 +27,8 @@ export function CompanyChips({ companies, selected, onToggle, highlighted, onHig
             variant={isSelected ? 'default' : 'outline'}
             style={{
               backgroundColor: isSelected ? color + '15' : 'transparent',
-              color: isSelected ? color : 'hsl(215 20% 35%)',
-              borderColor: isSelected ? color + '30' : 'hsl(220 20% 14%)',
+              color: isSelected ? color : tc.chartAxisTickMuted,
+              borderColor: isSelected ? color + '30' : tc.isDark ? 'hsl(220 20% 14%)' : 'hsl(0 0% 86%)',
               boxShadow: isHighlighted ? `0 0 12px ${color}40` : 'none',
             }}
             onClick={() => onToggle(company)}
@@ -57,6 +59,7 @@ const DOMAIN_ICON_MAP: Record<Domain, typeof Users> = {
 };
 
 export function DomainChips({ domains, selected, onToggle }: DomainChipsProps) {
+  const tc = useThemeColors();
   return (
     <div className="flex flex-wrap gap-1" data-testid="domain-chips">
       {domains.map(domain => {
@@ -69,9 +72,9 @@ export function DomainChips({ domains, selected, onToggle }: DomainChipsProps) {
             className="cursor-pointer select-none transition-all duration-200 text-[10px] px-1.5 py-0.5"
             variant={isSelected ? 'default' : 'outline'}
             style={{
-              backgroundColor: isSelected ? 'hsl(192 85% 50% / 0.10)' : 'transparent',
-              color: isSelected ? 'hsl(192 85% 60%)' : 'hsl(215 20% 35%)',
-              borderColor: isSelected ? 'hsl(192 85% 50% / 0.25)' : 'hsl(220 20% 14%)',
+              backgroundColor: isSelected ? tc.primaryMuted : 'transparent',
+              color: isSelected ? tc.primary : tc.chartAxisTickMuted,
+              borderColor: isSelected ? tc.primaryBorder : tc.isDark ? 'hsl(220 20% 14%)' : 'hsl(0 0% 86%)',
             }}
             onClick={() => onToggle(domain)}
           >

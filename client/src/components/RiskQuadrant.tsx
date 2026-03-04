@@ -9,6 +9,7 @@ import { X, ShieldAlert, ShieldCheck, Activity, Shield, Layers, Scale, FileWarni
 import { motion, AnimatePresence } from 'framer-motion';
 import { CompanyChips } from './ToggleChips';
 import { useDashboard } from '@/lib/DashboardContext';
+import { useThemeColors } from '@/lib/themeColors';
 import {
   COMPANIES, COMPANY_COLORS, RISK_COLORS, DOMAIN_COLORS_MAP,
   riskPoints, riskDomainStandards,
@@ -126,6 +127,7 @@ const DOMAIN_ICONS: Record<string, typeof Shield> = {
 export function RiskQuadrant() {
   const { state, dispatch } = useDashboard();
   const { selectedCompanies, highlightedCompany } = state;
+  const tc = useThemeColors();
   const [showDoorDash, setShowDoorDash] = useState(true);
   const [showCompetitors, setShowCompetitors] = useState(true);
   const [selectedPoint, setSelectedPoint] = useState<RiskPoint | null>(null);
@@ -321,17 +323,17 @@ export function RiskQuadrant() {
                 data-testid="quadrant-area-operational"
               />
 
-              <line x1={pad.left} y1={pad.top + plotH / 2} x2={pad.left + plotW} y2={pad.top + plotH / 2} stroke="hsl(220 20% 18%)" strokeWidth="1" strokeDasharray="4 4" style={{ pointerEvents: 'none' }} />
-              <line x1={pad.left + plotW / 2} y1={pad.top} x2={pad.left + plotW / 2} y2={pad.top + plotH} stroke="hsl(220 20% 18%)" strokeWidth="1" strokeDasharray="4 4" style={{ pointerEvents: 'none' }} />
-              <rect x={pad.left} y={pad.top} width={plotW} height={plotH} fill="none" stroke="hsl(220 20% 16%)" strokeWidth="1" rx="4" style={{ pointerEvents: 'none' }} />
+              <line x1={pad.left} y1={pad.top + plotH / 2} x2={pad.left + plotW} y2={pad.top + plotH / 2} stroke={tc.svgDash} strokeWidth="1" strokeDasharray="4 4" style={{ pointerEvents: 'none' }} />
+              <line x1={pad.left + plotW / 2} y1={pad.top} x2={pad.left + plotW / 2} y2={pad.top + plotH} stroke={tc.svgDash} strokeWidth="1" strokeDasharray="4 4" style={{ pointerEvents: 'none' }} />
+              <rect x={pad.left} y={pad.top} width={plotW} height={plotH} fill="none" stroke={tc.svgBg} strokeWidth="1" rx="4" style={{ pointerEvents: 'none' }} />
 
               <text x={pad.left + plotW / 4} y={pad.top + 16} textAnchor="middle" fontSize="10" fontWeight="700" fill={RISK_COLORS.Elevated} filter="url(#glow)" style={{ pointerEvents: 'none' }}>ELEVATED</text>
               <text x={pad.left + 3 * plotW / 4} y={pad.top + 16} textAnchor="middle" fontSize="10" fontWeight="700" fill={RISK_COLORS.Critical} filter="url(#glow)" style={{ pointerEvents: 'none' }}>CRITICAL</text>
               <text x={pad.left + plotW / 4} y={pad.top + plotH - 6} textAnchor="middle" fontSize="10" fontWeight="700" fill={RISK_COLORS.Standard} filter="url(#glow)" style={{ pointerEvents: 'none' }}>STANDARD</text>
               <text x={pad.left + 3 * plotW / 4} y={pad.top + plotH - 6} textAnchor="middle" fontSize="10" fontWeight="700" fill={RISK_COLORS.Operational} filter="url(#glow)" style={{ pointerEvents: 'none' }}>OPERATIONAL</text>
 
-              <text x={pad.left + plotW / 2} y={svgH - 4} textAnchor="middle" fontSize="10" fontWeight="600" fill="hsl(210 40% 60%)" opacity="0.6" style={{ pointerEvents: 'none' }}>Execution Authority</text>
-              <text x={10} y={pad.top + plotH / 2} textAnchor="middle" fontSize="10" fontWeight="600" fill="hsl(210 40% 60%)" opacity="0.6" transform={`rotate(-90, 10, ${pad.top + plotH / 2})`} style={{ pointerEvents: 'none' }}>Stakeholder Exposure</text>
+              <text x={pad.left + plotW / 2} y={svgH - 4} textAnchor="middle" fontSize="10" fontWeight="600" fill={tc.svgAxisLabel} opacity="0.6" style={{ pointerEvents: 'none' }}>Execution Authority</text>
+              <text x={10} y={pad.top + plotH / 2} textAnchor="middle" fontSize="10" fontWeight="600" fill={tc.svgAxisLabel} opacity="0.6" transform={`rotate(-90, 10, ${pad.top + plotH / 2})`} style={{ pointerEvents: 'none' }}>Stakeholder Exposure</text>
 
               {visiblePoints.map((point, idx) => {
                 const cx = pad.left + (point.x / 100) * plotW;
@@ -497,10 +499,10 @@ export function RiskQuadrant() {
             <div className="flex-1 min-h-0">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={riskWeightData} layout="vertical" margin={{ left: 0, right: 8, top: 0, bottom: 0 }}>
-                  <XAxis type="number" domain={[0, 5]} tick={{ fill: 'hsl(215 20% 40%)', fontSize: 9 }} axisLine={false} tickLine={false} />
-                  <YAxis type="category" dataKey="domain" width={70} tick={{ fill: 'hsl(210 40% 65%)', fontSize: 9 }} axisLine={false} tickLine={false} />
+                  <XAxis type="number" domain={[0, 5]} tick={{ fill: tc.chartAxisTickMuted, fontSize: 9 }} axisLine={false} tickLine={false} />
+                  <YAxis type="category" dataKey="domain" width={70} tick={{ fill: tc.chartAxisTickDomain, fontSize: 9 }} axisLine={false} tickLine={false} />
                   <RechartsTooltip
-                    contentStyle={{ backgroundColor: 'hsl(220 22% 9%)', border: '1px solid hsl(220 20% 16%)', borderRadius: 8, fontSize: 11, color: 'hsl(210 40% 90%)', boxShadow: '0 8px 32px hsl(0 0% 0% / 0.4)' }}
+                    contentStyle={{ backgroundColor: tc.tooltipBg, border: tc.tooltipBorder, borderRadius: 8, fontSize: 11, color: tc.tooltipColor, boxShadow: tc.tooltipShadow }}
                     formatter={(value: number) => [`${value} / 5`, 'Avg Risk Weight']}
                     labelFormatter={(label) => {
                       const item = riskWeightData.find(d => d.domain === label);
@@ -540,7 +542,7 @@ export function RiskQuadrant() {
                     <DIcon className="w-3.5 h-3.5 flex-shrink-0" style={{ color: domainColor }} />
                     <span className="text-[11px] flex-1 truncate text-muted-foreground/70">{d.domain}</span>
                     <span className="text-[10px] font-mono" style={{ color: domainColor }}>{d.requirements.length}</span>
-                    <div className="w-12 h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: 'hsl(220 20% 12%)' }}>
+                    <div className="w-12 h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: tc.barTrackBg }}>
                       <div className="h-full rounded-full" style={{ width: `${(avgW / 5) * 100}%`, backgroundColor: domainColor, boxShadow: `0 0 4px ${domainColor}50` }} />
                     </div>
                     <span className="text-[9px] font-mono text-muted-foreground/30 w-5 text-right">{avgW.toFixed(1)}</span>

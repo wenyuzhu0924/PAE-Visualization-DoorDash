@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useDashboard } from '@/lib/DashboardContext';
+import { useThemeColors } from '@/lib/themeColors';
 import {
   lifecycleStages, gates, controlSwimlanes, implementationPhases, redTeamCategories,
   STAGE_COLORS_PALETTE,
@@ -40,6 +41,7 @@ function runReadinessCheck(stage: LifecycleStage, controlKey: string, completedC
 export function GovernancePlaybook() {
   const { state, dispatch } = useDashboard();
   const { autonomyTier, exposureLevel } = state;
+  const tc = useThemeColors();
   const [selectedStage, setSelectedStage] = useState<LifecycleStage | null>(null);
   const [selectedGate, setSelectedGate] = useState<Gate | null>(null);
   const [readinessResults, setReadinessResults] = useState<Record<number, { passed: boolean; missing: string[] }>>({});
@@ -94,7 +96,7 @@ export function GovernancePlaybook() {
         </div>
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
-            <div className="w-20 h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: 'hsl(220 20% 12%)' }}>
+            <div className="w-20 h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: tc.barTrackBg }}>
               <motion.div className="h-full rounded-full" style={{ backgroundColor: intensityColor, boxShadow: `0 0 8px ${intensityColor}60` }} animate={{ width: `${overallProgress}%` }} transition={{ duration: 0.5 }} />
             </div>
             <span className="text-[10px] font-mono text-muted-foreground/40">{completedCount}/{totalControls}</span>
@@ -153,7 +155,7 @@ export function GovernancePlaybook() {
                       {readiness && (readiness.passed ? <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#14B8A6' }} /> : <XCircle className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#EC4899' }} />)}
                     </div>
                     <div className="space-y-0.5">
-                      <div className="h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: 'hsl(220 20% 12%)' }}>
+                      <div className="h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: tc.barTrackBg }}>
                         <motion.div
                           className="h-full rounded-full"
                           style={{ backgroundColor: stageColor, boxShadow: `0 0 8px ${stageColor}60` }}
@@ -322,7 +324,7 @@ export function GovernancePlaybook() {
                         <div className="flex gap-1">
                           {lane.stages.map((content, i) => (
                             <div key={i} className="flex-1 flex flex-col items-center gap-0.5">
-                              <div className="w-full h-2.5 rounded" style={{ backgroundColor: content ? STAGE_COLORS[i] + '30' : 'hsl(220 20% 10%)', boxShadow: content ? `0 0 6px ${STAGE_COLORS[i]}20` : 'none' }} title={content || `Stage ${i + 1}: inactive`} />
+                              <div className="w-full h-2.5 rounded" style={{ backgroundColor: content ? STAGE_COLORS[i] + '30' : tc.heatmapLow, boxShadow: content ? `0 0 6px ${STAGE_COLORS[i]}20` : 'none' }} title={content || `Stage ${i + 1}: inactive`} />
                               <span className="text-[8px] text-muted-foreground/25">S{i + 1}</span>
                             </div>
                           ))}
@@ -352,7 +354,7 @@ export function GovernancePlaybook() {
                         >
                           <div className="relative">
                             <svg width="44" height="44" viewBox="0 0 48 48">
-                              <circle cx="24" cy="24" r="20" fill="none" stroke="hsl(220 20% 12%)" strokeWidth="2.5" />
+                              <circle cx="24" cy="24" r="20" fill="none" stroke={tc.barTrackBg} strokeWidth="2.5" />
                               <motion.circle
                                 cx="24" cy="24" r="20" fill="none"
                                 stroke={stageColor}
@@ -391,7 +393,7 @@ export function GovernancePlaybook() {
           <div className="glass-card rounded-xl p-3 flex-shrink-0">
             <span className="text-[10px] font-semibold text-muted-foreground/50 uppercase tracking-widest flex items-center gap-1"><Calendar className="w-3 h-3 text-primary/50" />Roadmap</span>
             <div className="mt-2 relative">
-              <div className="absolute left-[8px] top-3 bottom-3 w-px" style={{ background: 'linear-gradient(180deg, hsl(220 20% 18%), hsl(220 20% 12%))' }} />
+              <div className="absolute left-[8px] top-3 bottom-3 w-px" style={{ background: `linear-gradient(180deg, ${tc.svgDash}, ${tc.barTrackBg})` }} />
               <div className="space-y-3">
                 {implementationPhases.map((phase, i) => (
                   <motion.div
@@ -453,7 +455,7 @@ export function GovernancePlaybook() {
                               <motion.div
                                 key={si}
                                 className="w-3.5 h-1 rounded-sm"
-                                style={{ backgroundColor: si < cat.severity ? sevColor : 'hsl(220 20% 12%)', boxShadow: si < cat.severity ? `0 0 3px ${sevColor}30` : 'none' }}
+                                style={{ backgroundColor: si < cat.severity ? sevColor : tc.barTrackBg, boxShadow: si < cat.severity ? `0 0 3px ${sevColor}30` : 'none' }}
                                 initial={{ scaleX: 0 }}
                                 animate={{ scaleX: 1 }}
                                 transition={{ delay: ci * 0.08 + si * 0.05 }}

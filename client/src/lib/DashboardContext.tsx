@@ -1,6 +1,8 @@
 import { createContext, useContext, useReducer, useEffect, type ReactNode } from 'react';
 import { COMPANIES, DOMAINS, type Company, type Domain } from './data';
 
+type ThemeMode = 'dark' | 'light';
+
 interface DashboardState {
   currentStep: number;
   selectedCompanies: Company[];
@@ -10,6 +12,7 @@ interface DashboardState {
   presentationMode: boolean;
   autonomyTier: 'Assistive' | 'Conditional' | 'Autonomous';
   exposureLevel: 'Low' | 'High';
+  theme: ThemeMode;
 }
 
 type Action =
@@ -22,7 +25,8 @@ type Action =
   | { type: 'SET_AUTONOMY_TIER'; tier: 'Assistive' | 'Conditional' | 'Autonomous' }
   | { type: 'SET_EXPOSURE'; level: 'Low' | 'High' }
   | { type: 'NEXT_STEP' }
-  | { type: 'PREV_STEP' };
+  | { type: 'PREV_STEP' }
+  | { type: 'TOGGLE_THEME' };
 
 const defaultState: DashboardState = {
   currentStep: 0,
@@ -33,6 +37,7 @@ const defaultState: DashboardState = {
   presentationMode: false,
   autonomyTier: 'Autonomous',
   exposureLevel: 'High',
+  theme: 'dark',
 };
 
 function loadState(): DashboardState {
@@ -84,6 +89,8 @@ function reducer(state: DashboardState, action: Action): DashboardState {
       return { ...state, currentStep: Math.min(state.currentStep + 1, 3) };
     case 'PREV_STEP':
       return { ...state, currentStep: Math.max(state.currentStep - 1, 0) };
+    case 'TOGGLE_THEME':
+      return { ...state, theme: state.theme === 'dark' ? 'light' : 'dark' };
     default:
       return state;
   }
@@ -101,6 +108,15 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     const { highlightedCompany, ...toSave } = state;
     localStorage.setItem('dashboard-state', JSON.stringify(toSave));
   }, [state]);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    if (state.theme === 'dark') {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
+  }, [state.theme]);
 
   return (
     <DashboardContext.Provider value={{ state, dispatch }}>

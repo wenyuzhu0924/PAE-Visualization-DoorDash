@@ -7,6 +7,7 @@ import { X, Info, Shield, AlertTriangle, Zap, Building2, Handshake, Shuffle } fr
 import { motion, AnimatePresence } from 'framer-motion';
 import { CompanyChips, DomainChips } from './ToggleChips';
 import { useDashboard } from '@/lib/DashboardContext';
+import { useThemeColors } from '@/lib/themeColors';
 import {
   COMPANIES, DOMAINS, COMPANY_COLORS, TIER_COLORS, STATUS_COLORS, SOURCE_COLORS,
   techTags, type Company, type Domain, type TechTag,
@@ -35,6 +36,7 @@ interface CellDetail {
 export function CompetitorTechMap() {
   const { state, dispatch } = useDashboard();
   const { selectedCompanies, selectedDomains, highlightedCompany } = state;
+  const tc = useThemeColors();
   const [selectedCell, setSelectedCell] = useState<CellDetail | null>(null);
 
   const techStats = useMemo(() => {
@@ -277,14 +279,14 @@ export function CompetitorTechMap() {
                       ))}
                     </Pie>
                     <RechartsTooltip
-                      contentStyle={{ backgroundColor: 'hsl(220 22% 9%)', border: '1px solid hsl(220 20% 16%)', borderRadius: 8, fontSize: 10, color: 'hsl(210 40% 90%)', boxShadow: '0 8px 32px hsl(0 0% 0% / 0.4)' }}
+                      contentStyle={{ backgroundColor: tc.tooltipBg, border: tc.tooltipBorder, borderRadius: 8, fontSize: 10, color: tc.tooltipColor, boxShadow: tc.tooltipShadow }}
                       formatter={(value: number, name: string) => [`${value} systems`, name]}
                     />
                   </PieChart>
                 </ResponsiveContainer>
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                   <div className="text-center">
-                    <p className="text-lg font-bold text-primary leading-none" style={{ filter: 'drop-shadow(0 0 6px hsl(192 85% 50% / 0.4))' }}>{techStats.total}</p>
+                    <p className="text-lg font-bold text-primary leading-none" style={{ filter: tc.primaryFilterGlow }}>{techStats.total}</p>
                     <p className="text-[8px] text-muted-foreground/40 uppercase tracking-wider">total</p>
                   </div>
                 </div>

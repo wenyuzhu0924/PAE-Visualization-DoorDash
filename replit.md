@@ -20,7 +20,8 @@ client/src/
   index.css                         - Dark theme CSS with glass/glow utilities
   lib/
     data.ts                         - All PAE data + centralized color constants (TIER_COLORS, RISK_COLORS, STATUS_COLORS, SOURCE_COLORS, STAGE_COLORS_PALETTE, DOMAIN_COLORS_MAP)
-    DashboardContext.tsx             - Global state management with localStorage
+    DashboardContext.tsx             - Global state management with localStorage (includes theme toggle)
+    themeColors.ts                   - useThemeColors() hook providing theme-aware inline style values
   pages/
     Dashboard.tsx                   - Main dashboard layout with sidebar, StepDots nav, presentation mode
   components/
@@ -43,14 +44,17 @@ client/src/
 
 ## Visual Design
 
-- **Dark theme only** (class="dark" on html element, deep navy background hsl(220 25% 5%))
-- **Tech keynote aesthetic**: glassmorphism, glow effects, gradient text, icon-emphasized navigation
-- Primary accent: cyan-blue hsl(192 85% 50%)
-- Glassmorphism cards: `.glass-card` (gradient bg + backdrop blur + subtle borders), `.glass-card-elevated` (stronger)
-- Glow effects: `.glow-blue`, `.glow-border-blue/teal/gold/pink/cyan/indigo` utilities
-- Gradient text: `.gradient-text` (blue), `.gradient-text-warm` (cyan-indigo-pink)
-- Dot grid background: `.tech-grid-bg`, accent line: `.accent-line`, `.accent-line-warm`
-- Dark scrollbar styling: 5px thin, dark track/thumb
+- **Day/Night theme toggle** managed via DashboardContext `theme` state + `TOGGLE_THEME` action
+  - Dark mode: deep navy bg hsl(220 25% 5%), cyan-blue primary hsl(192 85% 50%), glassmorphism with glow effects
+  - Light mode: white bg, DoorDash red/orange primary (#FF3008), clean cards with subtle shadows, no glow effects
+  - Theme class managed via JS on `<html>` element; flash-prevention inline script in index.html
+  - `useThemeColors()` hook from `lib/themeColors.ts` provides theme-aware inline style values for all components
+- **Tech keynote aesthetic**: glassmorphism, glow effects (dark only), gradient text, icon-emphasized navigation
+- Glassmorphism cards: `.glass-card`, `.glass-card-elevated` - both have dark/light variants via `.dark` prefix in CSS
+- Glow effects: `.glow-blue`, `.glow-border-*` utilities - neon glow in dark mode, subtle shadow in light mode
+- Gradient text: `.gradient-text` (teal-blue dark / red-orange light), `.gradient-text-warm`
+- Dot grid background: `.tech-grid-bg`, accent line: `.accent-line`, `.accent-line-warm` - all theme-aware
+- Scrollbar styling: theme-aware (dark track in dark mode, light track in light mode)
 - **Centralized semantic color palette** in data.ts:
   - Company colors: DoorDash #FF3008, Uber Eats #276EF1, Instacart #43B02A, Grubhub #F97316, Meituan #A855F7
   - TIER_COLORS: Assistive=#14B8A6, Conditional=#EAB308, Autonomous=#EC4899
