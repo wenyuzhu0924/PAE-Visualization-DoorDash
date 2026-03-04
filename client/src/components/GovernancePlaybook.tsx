@@ -278,37 +278,58 @@ export function GovernancePlaybook() {
             ) : selectedGate ? (
               <motion.div key="gate" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }} className="flex-1 min-h-0 flex flex-col">
                 <div className="glass-card-elevated rounded-xl glow-border-blue flex-1 min-h-0 flex flex-col">
-                  <div className="p-3 border-b border-border/20 flex-shrink-0">
+                  <div className="p-4 border-b border-border/20 flex-shrink-0">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-sm font-semibold">
-                        <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold" style={{ border: `1.5px solid ${intensityColor}`, color: intensityColor }}>G{selectedGate.id}</span>
-                        <span className="text-xs">{selectedGate.meaning}</span>
+                      <div className="flex items-center gap-2.5">
+                        <span className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold" style={{ border: `2px solid ${intensityColor}`, color: intensityColor, boxShadow: `0 0 10px ${intensityColor}25` }}>G{selectedGate.id}</span>
+                        <span className="text-sm font-semibold text-foreground/90">{selectedGate.meaning}</span>
                       </div>
-                      <Button size="icon" variant="ghost" className="w-6 h-6 text-muted-foreground/40" onClick={() => setSelectedGate(null)} data-testid="button-close-gate"><X className="w-3.5 h-3.5" /></Button>
+                      <Button size="icon" variant="ghost" className="w-7 h-7 text-muted-foreground/40" onClick={() => setSelectedGate(null)} data-testid="button-close-gate"><X className="w-4 h-4" /></Button>
                     </div>
                   </div>
-                  <div className="p-3 grid grid-cols-1 md:grid-cols-3 gap-3 flex-1">
+                  <div className="p-4 space-y-4 flex-1 overflow-y-auto">
                     <div>
-                      <p className="text-[10px] font-semibold text-muted-foreground/50 mb-1.5">Go/No-Go</p>
-                      <div className="space-y-1">
+                      <p className="text-xs font-semibold text-muted-foreground/60 mb-2 flex items-center gap-1.5"><ShieldCheck className="w-3.5 h-3.5" style={{ color: '#14B8A6' }} />Go/No-Go Criteria</p>
+                      <div className="space-y-1.5">
                         {(selectedGate.criteria[controlKey] || selectedGate.criteria['Assistive-Low'] || []).map((c, i) => (
-                          <div key={i} className="flex items-center gap-1.5 text-[11px] text-muted-foreground/60"><CheckCircle2 className="w-3 h-3 flex-shrink-0" style={{ color: '#14B8A6' }} />{c}</div>
+                          <div
+                            key={i}
+                            className="flex items-center gap-2.5 text-sm p-2 rounded-lg"
+                            style={{ backgroundColor: 'hsl(220 20% 14% / 0.5)', border: '1px solid hsl(220 20% 18% / 0.4)' }}
+                          >
+                            <CheckCircle2 className="w-4 h-4 flex-shrink-0" style={{ color: '#14B8A6' }} />
+                            <span className="text-foreground/85">{c}</span>
+                          </div>
                         ))}
                       </div>
                     </div>
                     <div>
-                      <p className="text-[10px] font-semibold text-muted-foreground/50 mb-1.5">Sign-offs</p>
-                      <div className="flex flex-wrap gap-1">
+                      <p className="text-xs font-semibold text-muted-foreground/60 mb-2 flex items-center gap-1.5"><Users className="w-3.5 h-3.5" style={{ color: intensityColor }} />Required Sign-offs</p>
+                      <div className="space-y-1.5">
                         {(selectedGate.signOffs[controlKey] || selectedGate.signOffs['Assistive-Low'] || []).map((s, i) => (
-                          <Badge key={i} variant="outline" className="text-[10px] no-default-active-elevate border-primary/15 text-primary/70 px-1.5 py-0.5">{s}</Badge>
+                          <div
+                            key={i}
+                            className="flex items-center gap-2.5 text-sm p-2 rounded-lg"
+                            style={{ backgroundColor: 'hsl(192 50% 20% / 0.12)', border: '1px solid hsl(192 50% 40% / 0.15)' }}
+                          >
+                            <Users className="w-4 h-4 flex-shrink-0" style={{ color: intensityColor }} />
+                            <span className="text-foreground/85">{s}</span>
+                          </div>
                         ))}
                       </div>
                     </div>
                     <div>
-                      <p className="text-[10px] font-semibold text-muted-foreground/50 mb-1.5">Evidence</p>
-                      <div className="flex flex-wrap gap-1">
+                      <p className="text-xs font-semibold text-muted-foreground/60 mb-2 flex items-center gap-1.5"><FileCheck className="w-3.5 h-3.5 text-primary/50" />Evidence Required</p>
+                      <div className="space-y-1.5">
                         {selectedGate.evidence.map((e, i) => (
-                          <Badge key={i} variant="outline" className="text-[10px] no-default-active-elevate border-border/20 px-1.5 py-0.5"><FileCheck className="w-2.5 h-2.5 mr-1 text-muted-foreground/40" />{e}</Badge>
+                          <div
+                            key={i}
+                            className="flex items-center gap-2.5 text-sm p-2 rounded-lg"
+                            style={{ backgroundColor: 'hsl(220 20% 14% / 0.5)', border: '1px solid hsl(220 20% 18% / 0.4)' }}
+                          >
+                            <FileCheck className="w-4 h-4 flex-shrink-0 text-primary/50" />
+                            <span className="text-foreground/85">{e}</span>
+                          </div>
                         ))}
                       </div>
                     </div>
