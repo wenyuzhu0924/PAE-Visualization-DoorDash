@@ -100,7 +100,7 @@ export function CapabilityComparison() {
   ];
 
   return (
-    <div className="flex flex-col gap-2 h-full overflow-y-auto">
+    <div className="flex flex-col gap-2 h-full overflow-hidden">
       <div className="flex items-center justify-between gap-3 flex-wrap flex-shrink-0">
         <CompanyChips
           companies={COMPANIES}
@@ -139,14 +139,14 @@ export function CapabilityComparison() {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 flex-1 min-h-[280px]">
-        <div className="lg:col-span-2 glass-card rounded-xl p-3 glow-border-blue flex flex-col">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 flex-1 min-h-0">
+        <div className="lg:col-span-2 glass-card rounded-xl p-3 glow-border-blue flex flex-col overflow-hidden">
           <div className="flex items-center justify-between mb-1 flex-shrink-0">
             <span className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-widest">Capability Radar</span>
             <span className="text-[10px] text-muted-foreground/40 font-mono">{selectedCompanies.length}co / {selectedDomains.length}dom</span>
           </div>
-          <div className="w-full flex-1 min-h-0 chart-glow">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="w-full flex-1 min-h-0 overflow-hidden chart-glow">
+            <ResponsiveContainer width="100%" height="100%" key={`radar-${selectedCompanies.length}-${selectedDomains.length}`}>
               <RadarChart data={radarData} cx="50%" cy="50%" outerRadius="75%">
                 <PolarGrid strokeDasharray="3 3" stroke={tc.chartGridStroke} />
                 <PolarAngleAxis
@@ -201,7 +201,7 @@ export function CapabilityComparison() {
           </div>
         </div>
 
-        <div className="flex flex-col gap-2 min-h-0">
+        <div className="flex flex-col gap-2 min-h-0 overflow-hidden">
           <div className="glass-card rounded-xl p-3 min-h-0 flex flex-col overflow-hidden">
             <span className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-widest flex-shrink-0">Rankings</span>
             <div className="mt-2 space-y-1.5 overflow-y-auto min-h-0">
@@ -234,8 +234,8 @@ export function CapabilityComparison() {
 
           <div className="glass-card rounded-xl p-3 flex-1 min-h-0 flex flex-col">
             <span className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-widest flex-shrink-0">Autonomy Distribution</span>
-            <div className="mt-1 flex-1 min-h-0">
-              <ResponsiveContainer width="100%" height="100%">
+            <div className="mt-1 flex-1 min-h-0 overflow-hidden">
+              <ResponsiveContainer width="100%" height="100%" key={`bar-${selectedCompanies.length}-${selectedDomains.length}`}>
                 <BarChart data={autonomyDist} layout="vertical" margin={{ left: 0, right: 8, top: 0, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke={tc.barTrackBg} horizontal={false} />
                   <XAxis type="number" tick={{ fill: tc.chartAxisTickMuted, fontSize: 10 }} axisLine={false} tickLine={false} />
@@ -273,7 +273,7 @@ export function CapabilityComparison() {
         </div>
       </div>
 
-      <div className="glass-card rounded-xl p-3 flex-shrink-0 max-h-[35%] flex flex-col overflow-hidden">
+      <div className="glass-card rounded-xl p-3 min-h-0 flex flex-col overflow-hidden" style={{ flex: '0 1 auto', maxHeight: '30%' }}>
         <div className="flex items-center justify-between mb-1.5 flex-shrink-0">
           <span className="text-[10px] font-semibold text-muted-foreground/50 uppercase tracking-widest">Score Heatmap</span>
           <div className="flex items-center gap-1">
