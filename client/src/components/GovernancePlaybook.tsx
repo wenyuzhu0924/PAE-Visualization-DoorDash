@@ -231,15 +231,20 @@ export function GovernancePlaybook() {
                           return (
                             <motion.div
                               key={i}
-                              className="flex items-center gap-2.5 text-sm p-1.5 rounded-md cursor-pointer transition-colors hover:bg-white/3"
+                              className="flex items-center gap-2.5 text-sm p-2 rounded-lg cursor-pointer transition-colors"
+                              style={{
+                                backgroundColor: isDone ? 'hsl(160 60% 40% / 0.06)' : 'hsl(220 20% 14% / 0.5)',
+                                border: `1px solid ${isDone ? 'hsl(160 60% 40% / 0.12)' : 'hsl(220 20% 18% / 0.4)'}`,
+                              }}
                               onClick={() => { const next = new Set(completedControls); if (isDone) next.delete(controlId); else next.add(controlId); setCompletedControls(next); }}
                               initial={{ opacity: 0, x: -15 }}
                               animate={{ opacity: 1, x: 0 }}
                               transition={{ delay: i * 0.06 }}
+                              whileHover={{ backgroundColor: 'hsl(220 20% 16% / 0.7)' }}
                               data-testid={`control-check-${selectedStage.id}-${i}`}
                             >
-                              {isDone ? <CheckCircle2 className="w-4 h-4 flex-shrink-0" style={{ color: '#14B8A6' }} /> : <div className="w-4 h-4 rounded-full border-[1.5px] flex-shrink-0" style={{ borderColor: STAGE_COLORS[selectedStage.id - 1] + '40' }} />}
-                              <span className={isDone ? 'line-through opacity-30' : 'text-muted-foreground/80'}>{control}</span>
+                              {isDone ? <CheckCircle2 className="w-4 h-4 flex-shrink-0" style={{ color: '#14B8A6' }} /> : <div className="w-4 h-4 rounded-full border-[1.5px] flex-shrink-0" style={{ borderColor: STAGE_COLORS[selectedStage.id - 1] + '60' }} />}
+                              <span className={isDone ? 'line-through text-muted-foreground/40' : 'text-foreground/90'}>{control}</span>
                             </motion.div>
                           );
                         })}
